@@ -1,0 +1,140 @@
+## Pergunta Central
+> **"De cada 100 estudantes que ingressam em uma graduação em Mato Grosso, quantos chegam ao diploma e em quais cursos a trajetória é interrompida?"**
+
+---
+
+## Equipe
+* **Ana Barbiero**
+* **Gabriela Camargo Nogueira**
+* **Isadora Fontana**
+* **Manuella Pedrotti Assumpção**
+* **Raphael Capistrano**
+
+ **Mato Grosso • 2026**
+
+---
+
+## Sumário
+1. [Introdução](#1-introdução)
+2. [Fundamentação Teórica](#2-fundamentação-teórica)
+3. [Fontes de Dados e Tratamento](#3-fontes-de-dados-e-tratamento-preliminar)
+4. [Metodologia e Indicadores](#4-metodologia-e-definição-dos-indicadores)
+5. [Arquitetura de Dados (Pipeline ELT)](#5-estratégia-de-implementação-e-visualização-pipeline-elt)
+6. [Mapeamento de Dashboards e Visualizações](#6-arquitetura-de-visualização-e-dashboards)
+7. [Resultados e Discussão](#7-resultados-e-discussão)
+8. [Conclusão](#8-conclusão)
+
+---
+
+## 1. Introdução
+A evasão discente constitui um dos problemas mais complexos, persistentes e desafiadores diagnosticados no ensino superior brasileiro e internacional. Nas últimas décadas, com a expressiva expansão da rede pública e privada de ensino superior — impulsionada por políticas de democratização de acesso, programas de financiamento, ações afirmativas e o surgimento do Sistema de Seleção Unificada (Sisu) —, houve mudanças profundas no perfil socioeconômico e acadêmico do estudante universitário. No entanto, a abertura de vagas e a garantia do ingresso não têm sido acompanhadas, na mesma proporção, por condições estruturais e pedagógicas efetivas que assegurem a permanência e o êxito até a diplomação.
+
+O presente projeto consolida a documentação técnica desenvolvida para o **DataHack UNIVAG 2026**. O objetivo central é fornecer um instrumental analítico e computacional robusto para compreender a trajetória acadêmica no ensino superior de Mato Grosso.
+
+---
+
+## 2. Fundamentação Teórica
+A discussão acadêmica acerca da evasão discente esbarra na polissemia do termo e na ausência de uma padronização conceitual unificada entre as Instituições de Ensino Superior (IES). Conforme apontado por revisões da literatura (Macedo, 2024), a falta de uniformidade terminológica gera fragilidades metodológicas e distorções na interpretação dos dados.
+
+### 2.1 Conceitos e Tipificações da Evasão
+* **Abandono:** Ato voluntário e informal do estudante, que deixa de frequentar as aulas ou de realizar a rematrícula sem comunicação prévia à instituição.
+* **Desistência:** Saída voluntária do aluno formalizada por meio de comunicação expressa ou cancelamento oficial de matrícula.
+* **Desligamento (ou Exclusão Institucional):** Ato unilateral praticado pela IES, fundamentado em normas regimentais, decurso de prazo máximo de integralização (jubilação) ou descumprimento de requisitos acadêmicos.
+* **Mobilidade (Evasão Interna / Reopção / Flutuação):** Processo no qual o estudante deixa um curso ou campus, mas permanece na mesma instituição ou migra para outra.
+* **Trancamento:** Suspensão temporária das atividades acadêmicas que, embora mantenha o vínculo formal, pode mascarar uma tendência à evasão definitiva.
+
+### 2.2 Evasão vs. Exclusão
+Sob uma perspectiva sociológica e institucional (Veloso & Almeida, 2002), diferencia-se **evasão** (postura ativa do aluno por motivos pessoais/profissionais) de **exclusão** (responsabilidade da IES por insuficiência de acolhimento, nivelamento, acompanhamento pedagógico e flexibilidade curricular).
+
+---
+
+## 3. Fontes de Dados e Tratamento Preliminar
+
+### 3.1 Fontes Oficiais
+1. **Microdados do Censo da Educação Superior (INEP):** Panorama macro de matrículas, ingressantes, concluintes, modalidade e categoria administrativa.
+2. **Indicadores de Trajetória dos Cursos de Graduação (INEP):** Acompanhamento longitudinal de coortes (permanência, conclusão acumulada e desistência).
+3. **CPC e Conceito ENADE de Licenciaturas:** Avaliações de qualidade institucional e proficiência discente.
+4. **Microdados de IES e Sistemas Acadêmicos:** Histórico transacional, status de matrícula, dados docentes e formas de ingresso (ampla concorrência vs. cotas).
+
+### 3.2 Limpeza e Higienização de Dados Brutos
+Ao processar os dados brutos, tratam-se as seguintes inconsistências estruturais:
+* **Duplicidade de Registros e Inscrições Múltiplas:** Filtragem por CPF/ID único para evitar dupla contagem em vínculos simultâneos.
+* **Campos Vazios em Variáveis-Chave:** Imputação e tratamento de omissões em modalidade (Presencial/EAD), categoria e situação de matrícula.
+* **Desalinhamento de Coortes:** Correção de divergências entre o ano de ingresso declarado e o primeiro vínculo efetivo no banco relacional.
+
+---
+
+## 4. Metodologia e Definição dos Indicadores
+
+### 4.1 A Abordagem por Geração Completa
+Baseando-se nas metodologias da Comissão Especial do MEC (1996), Veloso & Almeida (2002), Garcia et al. (2021) e Teixeira et al. (2023), o quantitativo de ingressantes (Ni) de uma coorte decompõe-se estritamente na soma de diplomados (Nd), evadidos (Ne) e retidos (Nr):
+
+**Ni = Nd + Ne + Nr**
+
+### 4.2 Métricas de Evasão Semestral
+Para mensurar a taxa de evasão por período letivo (Silva Filho et al., 2007; Lobo, 2012):
+
+**E(n) = 1 - [ (M(n) - I(n)) / (M(n-1) - C(n-1)) ]**
+
+*Onde:*
+* **E(n)**: Índice de evasão no período n
+* **M(n)**: Total de matrículas ativas no período n
+* **I(n)**: Ingressantes no período n
+* **M(n-1)**: Matrículas do período anterior
+* **C(n-1)**: Concluintes do período anterior
+
+---
+
+## 5. Estratégia de Implementação e Visualização (Pipeline ELT)
+
+[ EXTRACT (INEP/IBGE) ] ---> [ LOAD (PostgreSQL) ] ---> [ TRANSFORM (DuckDB/Python) ]
+
+
+### 5.1 Stack Tecnológica
+* **Processamento e Análise:** Python (`pandas`, `DuckDB`).
+* **Banco de Dados em Nuvem:** PostgreSQL hospedado no `Railway`.
+* **Backend:** API REST em `FastAPI` (Railway).
+* **Frontend:** Dashboard interativo em `Next.js` (Vercel).
+* **Controle de Versão:** GitHub.
+
+### 5.2 Camadas de Armazenamento do Banco de Dados
+1. **`Control`**: Auditoria, gestão de logs e controle de cargas.
+2. **`Raw`**: Armazenamento íntegro e imutável dos microdados brutos.
+3. **`Staging`**: Limpeza, padronização de tipos e normalização de chaves.
+4. **`Analytics`**: Tabelas agregadas, visões analíticas e indicadores prontos para consumo da API.
+
+---
+
+## 6. Arquitetura de Visualização e Dashboards
+
+| Código | Pergunta Analítica | Tipo de Gráfico | Objetivo de Negócio |
+| :---: | :--- | :--- | :--- |
+| **P1** | Quanto da turma fica pelo caminho? | **Área Empilhada** | Evolução relativa das proporções de concluintes, desistentes e retidos ao longo dos semestres. |
+| **P2** | Onde a rota mais se perde? | **Treemap** | Proporção de ingressantes (tamanho) vs. Taxa de desistência (cor) por área e curso. |
+| **P3** | Pública x Privada, Presencial x EAD | **Linhas Múltiplas** | Comparativo de retenção entre as 4 combinações de rede e modalidade. |
+| **P4** | Qualidade retém? | **Heatmap (Mapa de Calor)** | Relação entre fatores de abandono (pedagógicos, infraestrutura) e cursos/IES. |
+| **P5** | O funil das licenciaturas | **Gráfico de Funil** | Afunilamento do fluxo discente desde o ingresso até a diplomação docente. |
+| **B1** | Desertos de Ensino Superior | **Mapa Coroplético** | Densidade territorial de oferta de vagas e cobertura por município em MT. |
+| **B2** | Financiamento e Permanência | **Colunas Agrupadas** | Impacto de bolsas (ProUni, FIES, auxílios) na redução da evasão. |
+
+---
+
+## 7. Resultados e Discussão
+
+* **P1 — Dinâmica Longitudinal do Fluxo:** A evasão apresenta um pico agudo nos **dois primeiros anos (representando cerca de 68% das desvinculações totais)** (Teixeira et al., 2023). O segundo momento crítico ocorre nas fases intermediárias (4º/5º semestres) devido ao acúmulo de retenções em disciplinas básicas.
+* **P2 — Gargalos por Curso:** Os maiores índices de perda concentram-se nas **Engenharias, Computação e Licenciaturas Exatas (Matemática, Física, Química)**. Cursos da área da Saúde (Medicina, Enfermagem) registram as menores taxas de evasão.
+* **P3 — Redes e Modalidades:** Cursos EAD (predominantes na rede privada) registram taxas de desistência substancialmente superiores ao presencial. As IES públicas (UFMT, UNEMAT, IFMT) mantêm maior estabilidade presencial, mas enfrentam desafios nos turnos noturno e integral.
+* **P4 — O Peso do Fator Pedagógico:** Embora a questão financeira seja a queixa mais citada em volume, **problemas na qualidade de ensino, metodologias defasadas e falta de apoio pedagógico geram o maior impacto proporcional nas taxas efetivas de evasão** (Garcia et al., 2021).
+* **P5 — Vulnerabilidade nas Licenciaturas:** Identifica-se um afunilamento severo de concluintes formados, corroborado por baixos conceitos ENADE (Faixa 1) em diversos campi, evidenciando déficit na reposição de professores regionais.
+* **B1 — Desertos Educacionais:** Mapeamento geográfico revela forte concentração de vagas nos polos urbanos e escassez no interior de Mato Grosso, dependendo de EAD ou deslocamento pendular.
+* **B2 — Efeito Protetivo do Financiamento:** Alunos com bolsas de estudo e auxílios de permanência apresentam taxas de conclusão expressivamente maiores, mitigando o impacto do perfil de "estudante-trabalhador".
+
+---
+
+## 8. Conclusão
+A implementação da arquitetura **"Rota do Diploma"** demonstra que o combate à evasão no ensino superior de Mato Grosso exige decisões orientadas por evidências e engenharia de dados reprodutível. 
+
+A ferramenta permite que gestores transitem de diagnósticos tardios para ações preventivas focadas no acolhimento inicial, reestruturação pedagógica e fortalecimento das políticas de permanência, garantindo que o direito ao ingresso se converta no direito à diplomação com qualidade.
+
+---
+*Projeto desenvolvido para o **DataHack UNIVAG 2026**.*
