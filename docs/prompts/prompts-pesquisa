@@ -1,0 +1,39 @@
+# Prompts de Pesquisa - Manuella e Gabriela — DataHack 2026
+
+**Tema: Análises e processamento de planilhas**
+
+### Análise das planilhas por ano
+> Agora analise as planilhas de [ANO], seguindo o mesmo padrão das análises anteriores. Verifique possíveis erros, inconsistências e problemas que possam afetar a leitura pelo Python ou o funcionamento do dashboard. Ao final, apresente um resumo dos resultados e das correções necessárias.
+
+### Significado das novas colunas
+> Explique o significado das novas colunas encontradas nas planilhas, considerando os nomes e os valores apresentados. Se não for possível confirmar alguma informação, deixe isso claro, sem inventar definições.
+
+### Resumo das análises
+> Faça um resumo das análises das planilhas, destacando os principais problemas encontrados, seus possíveis impactos e as correções recomendadas. Utilize uma linguagem clara e profissional para que eu possa aproveitar o texto na minha apresentação.
+
+### Complementação da documentação
+> Complemente o documento anexado com os resultados das análises das 8 planilhas, mantendo a estrutura original e evitando mudanças desnecessárias. Escreva de forma clara e profissional, incluindo os principais problemas, as recomendações e a avaliação da qualidade dos dados.
+
+### Conexão entre conceitos e dados
+> Pode conectar esses conceitos com os dados e resultados das primeiras planilhas que te mandei?
+
+### Cruzamento com artigos acadêmicos
+> Consegue cruzar os resultados das primeiras planilhas e desse CSV com os artigos acadêmicos que conversamos?
+
+### Metodologia e conclusão
+> Com base no fluxo do infográfico da "Rota do Diploma", escreve para mim a Metodologia e a Conclusão do documento.
+
+### Organização das seções
+> Pode organizar todas as seções que criamos em uma ordem bem lógica e coerente para o relatório final?
+
+### Formatação das fórmulas em LaTeX
+> As fórmulas em LaTeX estão quebrando ao colar no Word. Pode arrumar a formatação dos cálculos para eu conseguir copiar e colar sem erro?
+
+### Explicação das variáveis da fórmula
+> Pode reescrever a explicação das variáveis da fórmula de evasão em texto simples para não dar problema de formatação?
+
+### Local da seção sobre limpeza dos dados
+> Onde fica melhor encaixar a parte de "Limpeza e Inconsistências nos Dados Brutos" no nosso documento?
+
+### Estrutura dos gráficos do dashboard
+> Adiciona na documentação a estrutura dos gráficos que escolhemos para o dashboard (para as perguntas P1 a P5 e as bônus B1 e B2).
