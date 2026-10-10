@@ -1,0 +1,315 @@
+# Gráficos do Dashboard: Explicação das Escolhas e Prompts de Codificação do MVP e do Infográfico
+
+> Este documento explica os gráficos escolhidos para cada página do dashboard e, ao final, reúne os prompts usados pela equipe no planejamento das visualizações, na codificação do MVP e na criação do infográfico.
+
+## Objetivo
+
+Cada gráfico do protótipo foi escolhido de acordo com o tipo de informação que precisamos apresentar. A intenção é tornar a leitura dos dados mais simples, permitir comparações e ajudar o usuário a perceber tendências, diferenças e pontos de atenção.
+
+Nas seções a seguir, descrevemos cada página do dashboard, os gráficos utilizados em cada uma e o motivo de cada escolha.
+
+## Respostas — Visão Geral
+
+Esta página não tem gráficos próprios. Ela reúne cards com os principais indicadores e reaproveita gráficos das demais páginas. A ideia é que o usuário encontre as respostas rapidamente, sem precisar percorrer o dashboard inteiro.
+
+## P1 — Trajetória dos Estudantes
+
+O objetivo desta página é entender como os estudantes evoluem ao longo dos anos, identificando desistências, conclusões e permanências. A pergunta central é: em que momento os estudantes mais desistem e quantos conseguem concluir o curso?
+
+O gráfico de linhas mostra a evolução da desistência, da conclusão e da permanência, o que facilita enxergar tendências e o momento em que um indicador ultrapassa o outro. A área empilhada apresenta a proporção de estudantes em cada situação, sempre somando 100%, e deixa evidente o crescimento das desistências.
+
+O gráfico de pirulitos compara a perda de estudantes em cada ano e destaca o 2º ano, que concentra a maior perda nos dados do protótipo. Por fim, uma linha simples mostra a quantidade de ingressantes por turma de entrada (coorte) ao longo do tempo.
+
+## P2 — Cursos e Áreas
+
+Aqui comparamos cursos e áreas do conhecimento para localizar as maiores e as menores taxas de desistência. A pergunta central é: quais cursos e áreas têm os melhores e os piores resultados de permanência?
+
+No treemap (mapa de blocos), cada bloco representa um curso: o tamanho indica a quantidade de ingressantes e a cor, a taxa de desistência. O gráfico divergente mostra os seis cursos com maior e os seis com menor desistência, comparando-os com a média.
+
+As linhas por coorte comparam turmas diferentes considerando o mesmo tempo de curso, o que torna a análise mais justa. Completa a página uma tabela por área, com os indicadores em valores exatos.
+
+## P3 — Rede e Modalidade
+
+Esta página compara os resultados das instituições públicas e privadas, levando em conta também as modalidades de ensino. A pergunta central é: existem diferenças relevantes entre as redes pública e privada e entre as modalidades?
+
+As colunas agrupadas colocam instituições públicas e privadas lado a lado em três indicadores, e uma tabela comparativa traz os valores exatos para consulta. Já as linhas múltiplas mostram a evolução das matrículas e da evasão em quatro grupos, com destaque para 2022, ano que apresenta um comportamento atípico nos dados.
+
+## P4 — Qualidade dos Cursos
+
+O objetivo é investigar se há relação entre os indicadores de qualidade dos cursos e a desistência dos estudantes. Para isso usamos o CPC (Conceito Preliminar de Curso), indicador de qualidade aplicado na avaliação dos cursos superiores. A pergunta central é: cursos com melhores indicadores de qualidade também têm menores taxas de desistência?
+
+A dispersão com bolhas relaciona o CPC à taxa de desistência; o tamanho da bolha representa a quantidade de matrículas, e uma linha de tendência ajuda a visualizar a relação. As linhas por faixa de CPC comparam a desistência entre faixas de qualidade, separando por rede e modalidade.
+
+O gráfico de pontos ligados compara cursos com notas altas e baixas em cada componente do CPC, destacando as diferenças em pontos percentuais (p.p.). Uma tabela por curso apresenta o CPC e os demais indicadores com valores exatos.
+
+## P5 — Licenciaturas
+
+Esta página analisa a formação de futuros professores, comparando ingresso, conclusão, desistência e proficiência. A pergunta central é: quantos estudantes ingressam nas licenciaturas, quantos concluem e como está a proficiência deles?
+
+As barras horizontais agrupadas comparam ingressantes e concluintes por licenciatura; o formato horizontal facilita a leitura dos nomes dos cursos. No gráfico de pizza de pizza, a primeira pizza mostra a situação dos ingressantes e a segunda detalha o perfil de quem concluiu.
+
+O funil mostra a redução do número de estudantes ao longo das etapas da formação. A dispersão em quadrantes relaciona desistência e proficiência para identificar os cursos com melhores e piores resultados. Por fim, o gráfico borboleta compara dois indicadores por curso, usando escalas separadas para manter a leitura clara.
+
+## B1 — Mapa de Oferta
+
+O objetivo é visualizar como a oferta de ensino superior se distribui entre os 141 municípios de Mato Grosso. A pergunta central é: quais municípios têm menor acesso à oferta de ensino superior?
+
+O mapa coroplético usa cores para representar os indicadores de cada município, e os municípios sem oferta aparecem em cinza. Tabelas complementares listam os municípios sem oferta e os de menor oferta, com os valores exatos.
+
+## B2 — Financiamento Estudantil
+
+Esta página analisa a participação do FIES e do ProUni e investiga uma possível relação desses programas com a permanência dos estudantes. A pergunta central é: o financiamento estudantil tem alguma relação com a permanência no ensino superior?
+
+As colunas agrupadas comparam os números de FIES e ProUni ano a ano, e o gráfico de linhas mostra como a participação desses programas nas matrículas evolui com o tempo. Os pontos com barras de erro comparam os resultados médios entre quartis (quatro grupos de dados) e mostram a incerteza das estimativas. O gráfico de dispersão relaciona financiamento e desistência por curso para identificar possíveis padrões.
+
+## Resumo — Por que usamos diferentes tipos de gráficos?
+
+De modo geral, cada formato atende a uma necessidade específica. Os gráficos de linhas servem para mostrar evolução e tendências ao longo do tempo, enquanto barras e colunas são usadas para comparar quantidades entre grupos. As áreas empilhadas mostram como a proporção de cada categoria muda, e o treemap permite comparar tamanho e intensidade de vários grupos ao mesmo tempo.
+
+A dispersão e as bolhas ajudam a investigar relações entre dois ou mais indicadores. Os mapas coropléticos tornam visíveis as diferenças geográficas, e o funil representa as etapas de um processo e as perdas entre elas. A pizza mostra a participação de cada categoria em um total, e os pirulitos comparam valores de forma visualmente mais leve.
+
+Os gráficos divergentes ajudam a identificar valores acima ou abaixo de uma referência. Já as tabelas são indicadas para consultar números exatos e comparar informações mais detalhadas.
+
+## Conclusão
+
+A escolha dos gráficos não foi apenas estética: cada formato cumpre uma função dentro do dashboard. Queremos que o usuário consiga entender rapidamente o que os dados mostram e comparar cursos, instituições, modalidades, municípios e estados.
+
+Também queremos que ele identifique padrões, como tendências e possíveis relações entre indicadores, e possa investigar informações mais detalhadas quando precisar. Com isso, os dados passam a servir de apoio para análises, planejamento e tomada de decisão.
+
+A proposta é transformar dados complexos em informações claras, organizadas e fáceis de interpretar, evitando gráficos desnecessários ou visualmente poluídos.
+
+---
+
+## Prompts de Isadora Fontana
+
+### 1. Contexto e definição dos dados
+
+Eu cuido do design e da experiência do usuário do dashboard de um desafio da UNIVAG. A implementação deve sair em HTML ou React. Olhando o PDF que anexei, me ajuda a montar uma lista direta dos dados que a gente precisa mostrar para responder às cinco perguntas obrigatórias e aos dois bônus. Por enquanto, não quero pensar em tipo de gráfico ou tabela, só nos dados.
+
+### 2. Organização das páginas e filtros
+
+Agora quero distribuir esses dados em páginas ou abas do BI, juntando os assuntos que fazem sentido ficar no mesmo lugar. O usuário precisa conseguir escolher a coorte para comparar os resultados da trajetória acadêmica. Me diz também quais filtros fazem sentido em cada página, lembrando que as bases têm períodos e características diferentes.
+
+### 3. Seleção das visualizações
+
+Que gráficos e tabelas você usaria em cada página? Explica rapidinho a vantagem de cada um. Estou pensando em barras agrupadas para comparar permanência, conclusão e desistência entre instituições públicas e privadas, separando presencial e EAD. Queria saber também se um mapa de calor funciona bem para a P4, que trata da relação entre CPC e desistência.
+
+### 4. Detalhamento das escolhas finais
+
+Fechamos as visualizações principais assim:
+
+- P1: gráfico de linhas;
+- P2: treemap;
+- P3: gráfico de linhas múltiplas;
+- P4: mapa de calor;
+- P5: barras horizontais comparativas;
+- B1: mapa coroplético interativo;
+- B2: barras empilhadas.
+
+Para cada uma, quero entender por que ela faz sentido, quais dados entram e como eles aparecem no visual (eixos, linhas, cores, tamanhos ou segmentos). Descreve também os filtros, as interações e os cuidados metodológicos que a gente precisa ter. E, se alguma dessas escolhas não der conta de responder completamente à pergunta do desafio, me avisa onde está a limitação.
+
+### 5. Documentação em Markdown
+
+Por último, preciso de um relatório em Markdown reunindo tudo o que decidimos sobre o dashboard: a organização das páginas, a justificativa de cada visualização, os dados necessários, como cada um é representado, os filtros e os cuidados na hora de interpretar. A ideia é compartilhar com a equipe e colocar na documentação do projeto, então o texto precisa ser claro e profissional.
+
+---
+
+## Prompts de Raphael Capistrano
+
+### 1. P1 — Trajetória acadêmica e evasão (áreas empilhadas)
+
+Para a P1 do dashboard Rota do Diploma, quero montar um gráfico de áreas empilhadas em 100% mostrando a trajetória da coorte de ingressantes de 2015 até 2024, dividida entre quem desistiu, quem concluiu a graduação e quem ainda estava matriculado. A ideia é acompanhar como o percentual de cada situação muda ao longo dos anos e enxergar, no próprio gráfico, os períodos em que a evasão aumenta.
+
+Como você definiria os eixos, as categorias, os indicadores percentuais, os tooltips e as interações no Power BI? Quero deixar clara a diferença entre evasão acumulada e evasão ocorrida em cada ano, e também destacar o período de maior perda sem perder a precisão estatística. Use só métricas que dá para calcular com os dados que temos.
+
+### 2. P3 — Evasão anual e matrículas por rede e modalidade (linhas múltiplas)
+
+Para a P3, pensei em gráficos de linhas múltiplas para acompanhar a evolução da evasão anual e do número de matrículas entre 2021 e 2024, separando por rede de ensino e modalidade. Cada combinação de rede e modalidade ganharia uma linha própria, de acordo com as categorias que realmente existem na base. Quero que fique fácil comparar os grupos e perceber se algum ano foge do padrão.
+
+Você acha melhor usar dois gráficos separados, um para a taxa de evasão e outro para o número de matrículas, mantendo as mesmas cores nos dois? Me passa também os eixos, as legendas, os tooltips e os filtros interativos no Power BI. E como dá para identificar variações relevantes sem chamar um ano atípico só porque ele parece diferente no gráfico?
+
+### 3. P5 — Trajetória nas licenciaturas e proficiência no Enade
+
+Para a P5, estou avaliando um gráfico de funil para mostrar a quantidade e o percentual de estudantes das licenciaturas que desistiram, concluíram ou continuaram matriculados. Queria saber também se faz sentido colocar no mesmo visual a proficiência dos participantes do Enade 2025. O objetivo é comunicar, de forma clara, tanto a trajetória acadêmica quanto o desempenho de quem foi avaliado.
+
+Compara o funil com outras opções, como o diagrama de Sankey, e me diz qual representa melhor os diferentes destinos dos estudantes. Quais métricas devem aparecer, como mostrar quantidades e percentuais e quais limitações precisamos considerar?
+
+Um cuidado importante: não dá para assumir que os concluintes da coorte acompanhada são as mesmas pessoas avaliadas no Enade 2025. Se as populações não coincidirem, como apresentar as duas análises no mesmo painel sem dar a entender uma relação que não foi comprovada?
+
+---
+
+## Prompts de Ana Barbiero
+
+> Os prompts a seguir são da etapa de codificação do MVP: planejamento técnico, definição da stack, engenharia de dados (ELT), configuração do banco, desenvolvimento do backend e preparação do infográfico e da apresentação.
+
+### Planejamento inicial e definição da solução
+
+#### 1. Estruturação do projeto
+
+Estamos no desafio Rota do Diploma, que investiga a trajetória e a evasão no ensino superior em Mato Grosso usando dados públicos do INEP e do IBGE. Como você organizaria o projeto? Quero que a proposta passe pela pesquisa, análise de dados, preparação das fontes, definição dos indicadores e desenvolvimento da plataforma de visualização. Lembra que a gente precisa responder às perguntas obrigatórias do desafio e entregar algo intuitivo, bem organizado visualmente e acessível pela web.
+
+#### 2. Organização da equipe e planejamento das atividades
+
+Somos cinco pessoas e temos o tempo apertado de um hackathon. Me ajuda a montar um planejamento de desenvolvimento dividindo as responsabilidades entre arquitetura, banco de dados, engenharia de dados, análise, backend, frontend, testes e documentação? Quero as demandas separadas por fase, com prioridades, dependências, entregáveis e critérios de conclusão. O código precisa ficar versionado no GitHub e a aplicação tem que estar publicada na nuvem para a avaliação.
+
+### Avaliação e definição da stack tecnológica
+
+#### 3. Escolha do banco de dados e backend
+
+Quais opções de banco de dados e backend fazem mais sentido para uma plataforma de análise de dados educacionais? As bases do INEP e do IBGE são grandes, e a gente vai precisar de consultas SQL, relacionar fontes diferentes e entregar indicadores para uma aplicação web. Prefiro tecnologias bem documentadas, que conversem bem com Python, sejam fáceis de desenvolver e funcionem no Railway. Me dá uma recomendação justificada, pesando desempenho, escalabilidade, manutenção e tempo de implementação.
+
+#### 4. Definição da arquitetura da aplicação
+
+A ideia é usar PostgreSQL para persistência, FastAPI para servir os dados e React para apresentar os resultados, com PostgreSQL e FastAPI no Railway e o frontend na Vercel. Como você montaria essa arquitetura? Quero entender como organizar a comunicação entre os serviços, o uso de variáveis de ambiente, a conexão privada entre a API e o banco e a separação de responsabilidades.
+
+#### 5. Avaliação de React e Next.js
+
+Já temos backend próprio em FastAPI e vamos construir uma plataforma de dashboards interativos. Compara para mim React com Vite e Next.js, olhando complexidade, integração com APIs REST, manutenção, desempenho, personalização e facilidade de publicar na Vercel. Qual dos dois equilibra melhor recursos, simplicidade e prazo? Nossa tendência é ir de React, Vite e TypeScript, deixando o FastAPI responsável pelo processamento e pelo acesso aos dados.
+
+#### 6. Justificativa da não utilização de Power BI
+
+Preciso de uma justificativa técnica para construir uma plataforma própria de visualização em vez de usar o Power BI. Pesa o fato de não termos licenciamento corporativo, as necessidades de compartilhamento, a personalização da interface, a integração com a nossa API e a reprodutibilidade do projeto. Quero vantagens, limitações e impactos de forma equilibrada, sem desmerecer o que as ferramentas de BI tradicionais oferecem.
+
+### Planejamento de engenharia de dados e ELT
+
+#### 7. Planejamento completo do processo ELT
+
+Me ajuda a planejar o Extract, Load e Transform para integrar os dados públicos do INEP e do IBGE? São vários arquivos, em formatos e tamanhos diferentes: planilhas XLSX, CSV e JSON. O planejamento precisa cobrir:
+
+- extração e inventário das fontes;
+- avaliação de tipos, colunas, chaves e granularidade;
+- preparação técnica dos arquivos com Python e pandas;
+- carga controlada no PostgreSQL;
+- transformações e consultas SQL;
+- tratamento de nulos e inconsistências;
+- padronização dos identificadores;
+- estratégia de idempotência;
+- validação das junções;
+- rastreabilidade e reprodutibilidade.
+
+Deixa claro o que é feito antes e o que é feito depois da carga, e por que o ELT faz mais sentido aqui.
+
+#### 8. Organização das camadas do banco
+
+Pensei em organizar o PostgreSQL em quatro schemas:
+
+- `control`: controle de execução, auditoria e rastreabilidade;
+- `raw`: dados de origem como foram carregados;
+- `staging`: dados padronizados e prontos para integração;
+- `analytics`: indicadores e agregações consumidos pela API.
+
+Explica o papel de cada camada e como os registros devem passar de uma para outra. Leva em conta manutenção, integridade dos dados, desempenho e facilidade de encontrar falhas.
+
+#### 9. Modelagem e relacionamento das fontes
+
+Como você modelaria o relacionamento entre as bases de trajetória, o Censo da Educação Superior, os indicadores de qualidade e as informações municipais? Os identificadores principais são `CO_CURSO`, `CO_IES` e `CO_MUNICIPIO`. Quero critérios para analisar chaves primárias e estrangeiras, granularidade, cardinalidade e compatibilidade temporal, além de um jeito de medir a taxa de correspondência entre as fontes e evitar duplicações por junções erradas. Não fecha nenhuma estrutura definitiva antes de olharmos os dicionários oficiais.
+
+#### 10. Idempotência e qualidade dos dados
+
+As rotinas de ingestão precisam poder rodar várias vezes sem duplicar registros nem bagunçar os resultados. Que mecanismos você sugere? Pensa em controle de execução, identificação dos arquivos de origem, hashes, restrições de unicidade, transações e estratégias de inserção ou atualização. Sugere também testes para validar integridade, consistência dos indicadores, compatibilidade dos dados e o comportamento do pipeline quando ele é reexecutado.
+
+### Planejamento das análises educacionais
+
+#### 11. Definição dos indicadores e questões de pesquisa
+
+A pergunta central do desafio é: "De cada 100 estudantes que ingressam em uma graduação em Mato Grosso, quantos chegam ao diploma e em quais cursos a rota se perde?". Como estruturar as análises para responder a ela e às cinco questões obrigatórias?
+
+- trajetória dos ingressantes: desistência, conclusão e permanência;
+- cursos e áreas com maiores e menores taxas de desistência;
+- comparação entre redes pública e privada e entre presencial e EAD;
+- associação entre CPC e desistência;
+- trajetória das licenciaturas e proficiência no Enade.
+
+Inclui também os bônus de oferta territorial do ensino superior e financiamento estudantil. Para cada análise, me diz quais bases usar, quais indicadores, como calcular e que cuidados metodológicos tomar.
+
+#### 12. Análises complementares e fundamentação científica
+
+Vale a pena ampliar as análises para comparar a evasão entre municípios, estados, cursos e áreas de formação? Pensei em cruzar com indicadores socioeconômicos, dados públicos do mercado de trabalho e remuneração por ocupação. Me ajuda a encontrar fontes públicas adequadas e referências científicas que ajudem a interpretar os resultados. Separa bem associação estatística de relação causal e aponta as limitações de comparabilidade entre períodos, correspondência entre cursos e ocupações e disponibilidade dos dados.
+
+### Configuração do PostgreSQL no Railway
+
+#### 13. Criação e organização do banco
+
+Como criar e configurar uma instância PostgreSQL no Railway? Quero saber o que instalar localmente, quais ferramentas de administração usar, como organizar os schemas e como deixar o ambiente pronto para integrar com FastAPI e Alembic. Considera boas práticas de segurança, gestão de credenciais, conexão privada e versionamento da estrutura do banco.
+
+#### 14. Conexão local com o PostgreSQL
+
+Preciso conectar o PostgreSQL do Railway ao DBeaver no meu Mac. De preferência por túnel privado com o Railway CLI, sem expor o banco publicamente à toa. Me passa o passo a passo para configurar o SSH, abrir o túnel, testar a conexão e rodar uma consulta SQL de verificação.
+
+#### 15. Migrations e versionamento do banco
+
+Quero gerenciar as mudanças de estrutura do PostgreSQL com SQLAlchemy e Alembic, começando pela criação dos schemas `control`, `raw`, `staging` e `analytics`. As migrations precisam ficar versionadas no GitHub e rodar de forma controlada, sem nenhuma alteração destrutiva no banco que já existe. As tabelas definitivas só devem ser criadas depois que a gente analisar os dicionários e a estrutura real das fontes.
+
+### Arquitetura e implementação do backend
+
+#### 16. Estruturação profissional do FastAPI
+
+Vamos montar a estrutura inicial do backend do Rota do Diploma com Python, FastAPI, SQLAlchemy, Pydantic e Alembic, seguindo boas práticas de engenharia de software. A ideia é uma arquitetura modular em camadas, separando:
+
+- routers e contratos HTTP;
+- services e regras de negócio;
+- repositories e persistência;
+- configurações e infraestrutura;
+- modelos e schemas;
+- testes automatizados.
+
+Usa tipagem, injeção de dependências, tratamento de erros padronizado, logging seguro, configuração por ambiente e documentação OpenAPI. Sem abstrações desnecessárias: quero uma estrutura que aguente o projeto crescer.
+
+#### 17. Configuração da persistência e conexão com o PostgreSQL
+
+Agora é a camada de persistência, com SQLAlchemy 2.x e psycopg 3. Precisa configurar engine, gerenciamento de sessões, conexão por variáveis de ambiente, tratamento de falhas e fechamento correto dos recursos. Em desenvolvimento, a conexão vai pelo túnel privado do Railway; em produção, pela rede privada entre os serviços. O `/health/ready` deve fazer uma consulta real ao banco, enquanto o `/health/live` continua independente da persistência. A resposta deve ser HTTP 200 quando o banco estiver disponível e HTTP 503 quando não estiver.
+
+#### 18. Testes, qualidade e documentação do backend
+
+Quais testes automatizados você montaria para validar a inicialização da API, os health checks, a conexão com o banco, o tratamento de erros, as configurações e as dependências? Usa pytest e HTTPX e mantém os testes que já existem. Configura o Ruff para lint e formatação, compatível com as versões de Python do projeto. Documenta instalação, configuração, execução, migrations, testes, variáveis de ambiente e publicação no Railway. Testes que mexem no banco precisam rodar em ambiente isolado, sem tocar em dados reais.
+
+### Revisão da arquitetura e continuidade do desenvolvimento
+
+#### 19. Atualização da escolha do frontend
+
+Mudamos de ideia no frontend: sai o Next.js, entra React com Vite e TypeScript. Revisa a arquitetura mantendo FastAPI, PostgreSQL, Railway, Python, pandas e o planejamento do ELT. Confere as configurações e a documentação e atualiza só o que tem a ver com essa decisão. Ainda não é para desenvolver o frontend, nem para reescrever partes do backend que já estão implementadas e validadas.
+
+#### 20. Auditoria do estado atual do backend
+
+Dá uma olhada no backend como está hoje e me entrega um relatório técnico com:
+
+- estrutura de pastas;
+- dependências;
+- configurações implementadas;
+- endpoints disponíveis;
+- integração com o PostgreSQL;
+- situação das migrations;
+- testes e verificações de qualidade;
+- preparação para o deploy;
+- pendências técnicas.
+
+Separa o que está implementado, o que foi de fato testado e o que ainda é só plano. Não altera nenhum arquivo durante a auditoria.
+
+#### 21. Continuidade da implementação
+
+A primeira etapa do FastAPI já está pronta: inicialização, configurações, Swagger, health check básico, testes e lint funcionando. Agora quero planejar a camada de persistência, priorizando SQLAlchemy, psycopg, conexão com o PostgreSQL, integração do readiness e configuração do Alembic. Mantém a estrutura atual e vai fazendo mudanças incrementais, com testes e documentação. Nada de pipelines completos ou modelos definitivos antes de analisarmos as fontes oficiais.
+
+### Documentação, infográfico e apresentação
+
+#### 22. Infográfico do planejamento técnico
+
+Quero transformar o planejamento inicial num infográfico objetivo, visual e fácil de entender, mostrando:
+
+- problema central;
+- objetivo;
+- stack tecnológica;
+- arquitetura geral;
+- etapas do ELT;
+- camadas do banco;
+- divisão de responsabilidades;
+- próximos passos.
+
+Usa ícones, fluxos, setas e textos curtos, com uma identidade visual profissional em azul, branco e roxo. A stack representada é a atualizada: React, Vite, TypeScript, FastAPI, PostgreSQL e Python com pandas. O DuckDB não entra.
+
+#### 23. Estruturação da apresentação técnica
+
+Preciso montar uma apresentação para explicar o planejamento inicial e defender as decisões de arquitetura diante da banca. O material deve falar do problema, das fontes públicas, das tecnologias escolhidas, da arquitetura ELT, dos mecanismos de qualidade e das entregas previstas. Quero justificativas diretas para PostgreSQL, Railway, Python, FastAPI e React, e também para termos feito uma plataforma própria em vez de usar o Power BI.
+
+#### 24. Preparação da apresentação oral
+
+Me ajuda a escrever um roteiro para a apresentação, num tom natural, profissional e acessível, sem formalidade demais? Precisa explicar o objetivo do projeto, como funciona o ELT, para que serve cada tecnologia e como garantimos a qualidade dos dados. Prepara também respostas para perguntas que a banca pode fazer sobre idempotência, junções, escolha do banco, hospedagem e reprodutibilidade. E deixa bem claro o que já está implementado e o que ainda é planejamento.
