@@ -7,7 +7,6 @@ export const pages = [
   {id: 'p5', label: 'P5 · Licenciaturas', title: 'O funil das licenciaturas'},
   {id: 'b1', label: 'B1 · Mapa de oferta', title: 'Distribuição geográfica da oferta'},
   {id: 'b2', label: 'B2 · Financiamento', title: 'Financiamento estudantil e permanência'},
-  {id: 'resumo', label: 'Resumo final', title: 'Resumo final'},
   {id: 'br', label: 'Brasil', title: 'Panorama nacional'},
 ] as const;
 export type PageId = typeof pages[number]['id'];

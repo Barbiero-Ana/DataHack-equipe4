@@ -1,5 +1,5 @@
 import {GEO_BR, GEO_MT} from '../visualization/geo.js';
-import {C, fmt, empty, stackedArea, lineChart, lollipop, scatter, funnel, sparkline} from '../visualization/charts.js';
+import {C, fmt, empty, stackedArea, lineChart, lollipop, scatter, funnel} from '../visualization/charts.js';
 import {ramp, RAMP_DIV, RAMP_SEQ, RAMP_TEAL, treemap, hbarsGrouped, groupedColumns, choropleth, butterfly} from '../visualization/charts2.js';
 import {extremes, gapDots, whiskers, pieOfPie, correlations} from './fixedCharts.js';
 import {DATA, ANOS, CENSO_ANOS, MIN_COORTE, MIN_RANKING, curta, filtra, agrega, porGrupo, tda, spearman, censo, GRUPOS, situacao, lobo, anoAtipico,
@@ -323,55 +323,9 @@ addPage({id:'ans', title:'Respostas às perguntas', sub:'', src:'INEP · IBGE', 
   el.querySelectorAll('.qcard').forEach(b => b.onclick = () => { loc.ans = +b.dataset.i; renderAll(); });
 }});
 
-/* Resumo final */
-addPage({id:'resumo', title:'Resumo final', sub:'Três conclusões que os dados sustentam e a recomendação que decorre delas. Reflete os filtros ativos.', src:'INEP · IBGE', render(el) {
-  const cs = cursos(); if (!cs.length) return semDados(el, this);
-  const a = agrega(cs), f = a.fim, ate2 = 100 * a.anos[1].S / f.S, ar = areasRows(cs).filter(x => x.N >= MIN_RANKING), hiA = ar[0], loA = ar[ar.length - 1];
-  const rows = rotulos(cs).filter(r => r.N >= MIN_RANKING).sort((x, y) => y.d - x.d), top3 = rows.slice(0, 3).map(r => r.nome.replace(' formação de professor', ' (licenciatura)'));
-  const pub = agrega(cs.filter(c => c.rede === 'publica')).fim.tda, pri = agrega(cs.filter(c => c.rede === 'privada')).fim.tda;
-  const cen = censo(state), ead = lobo(cen.soma(2024, 'privada', 2), cen.soma(2023, 'privada', 2));
-  const pts = cpcPontos(cs), rho = spearman(pts.map(p => p.cpc), pts.map(p => p.tda)), B = b2data(), q = B.q;
-  const b1 = b1rows(), des = b1.filter(m => m.vagas === 0);
-  const lf = leituraFies(q), cpcNulo = rho == null || Math.abs(rho) < .1;
-  const C3 = [
-   {n:pc(f.tda, 0), t:'A perda é alta e acontece cedo', x:`${fmt(f.tda, 0)} de cada 100 ingressantes de 2015 desistiram do curso. ${pc(ate2, 0)} de todas as desistências ocorreram até o 2º ano, e o pico é no ${a.pico.ano - 2014}º ano (${fmt(a.pico.tada, 1)} p.p. da turma).`, ev:'P1 · Trajetória', go:'p1'},
-   {n:hiA ? pc(hiA.d, 0) : '—', t:'A perda é desigual entre áreas, cursos e redes', x:`${hiA ? curta(hiA.area) + ' perde ' + pc(hiA.d, 0) + ' da turma, contra ' + pc(loA.d, 0) + ' em ' + curta(loA.area) + '. ' : ''}Na rede privada presencial a desistência é ${pc(pri, 0)}, ante ${pc(pub, 0)} na pública; no EAD privado a evasão anual estimada chega a ${pc(ead, 0)}.`, ev:'P2 e P3 · Cursos, rede e modalidade', go:'p2'},
-   {n:rho == null ? '—' : fmt(rho, 2), t:cpcNulo ? (lf.padrao === 'menor' ? 'O CPC não explica; mais FIES, menos desistência' : 'CPC e FIES não explicam a diferença de forma consistente') : 'Qualidade e financiamento se associam à permanência', x:`A correlação entre CPC e desistência é ${forca(rho)} (${rho == null ? '—' : fmt(rho, 2)}, em ${pts.length} cursos). Na rede privada, ${lf.txt || 'há poucos cursos com financiamento no recorte'}. Os fatores da desistência precisam ser buscados também fora desses indicadores.`, ev:'P4 e B2 · Qualidade e financiamento', go:'p4'}
-  ];
-  const minis = [
-    {v:a.anos.map(x => x.tada), cor:C.loss, cap:'Desistência a cada ano, 2015–2024 (p.p.)'},
-    {v:ar.map(x => x.d), cor:C.sand, cap:'Desistência por área, da maior para a menor'},
-    {v:q.map(x => x.desist), cor:C.blue, cap:'Desistência por faixa de FIES (sem FIES → mais de 10%)'}
-  ];
-  const tese = `${fmt(f.tda / 10, 0)} em cada 10 ingressantes de 2015 em cursos presenciais de MT desistiram do curso, ${ate2 >= 35 ? 'boa parte nos dois primeiros anos' : 'ao longo de toda a trajetória'}. A perda se concentra em ${hiA ? curta(hiA.area) : 'algumas áreas'}${top3.length ? ', em cursos como ' + top3.slice(0, 2).join(' e ') : ''}, e é maior na rede ${pri > pub ? 'privada' : 'pública'}${cpcNulo ? '; o CPC não explica essa diferença' + (lf.padrao === 'irregular' ? ', e a relação com o FIES é irregular' : '') : ''}.`;
-  const steps = [['Quanto', 'P1'], ['Onde', 'P2 · P3'], ['Por quê', 'P4 · P5 · B2'], ['O que fazer', 'Recomendação']];
-  el.innerHTML = pageHead(this) + `<div class="sum-top"><div class="thesis"><span class="ans-q">Tese</span><p>${tese}</p></div>
-    <div class="path">${steps.map((s, i) => `<div class="step ${i === 3 ? 'last' : ''}"><span class="sn">${i + 1}</span><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('')}</div></div>
-   <h3 class="sec">Três conclusões</h3>
-   <div class="concl-list">${C3.map((c, i) => `<div class="card concl"><div class="c-num">${i + 1}</div>
-     <div class="c-metric"><b>${c.n}</b><span>${c.t}</span></div>
-     <div class="c-text"><p>${c.x}</p><button type="button" class="link" data-go="${c.go}"><i class="fi fi-rr-angle-right"></i>Ver evidência: ${c.ev}</button></div>
-     <div class="c-mini"><div id="mini${i}"></div><span>${minis[i].cap}</span></div></div>`).join('')}</div>
-   <h3 class="sec">Recomendação</h3>
-   <div class="reco"><div class="reco-head"><i class="fi fi-rr-flag"></i><div><span class="ans-q">Prioridade de ação</span><h3>Agir nos dois primeiros anos dos cursos com maior perda</h3></div></div>
-    <div class="reco-body"><div class="reco-why"><h4>Por que aqui</h4>
-      <div class="pills"><div class="pill"><b>${pc(ate2, 0)}</b><span>das desistências acontecem até o 2º ano</span></div>
-      <div class="pill"><b>${hiA ? pc(hiA.d, 0) : '—'}</b><span>de desistência em ${hiA ? curta(hiA.area) : '—'}, a área com maior perda</span></div>
-      <div class="pill"><b>${des.length} de ${b1.length}</b><span>municípios sem vaga presencial de graduação</span></div></div></div>
-     <div class="reco-do"><h4>O que fazer</h4><ol class="acts">
-      <li><b>Acompanhar cedo</b><span>Busca ativa e apoio acadêmico no 1º e no 2º ano, quando a turma mais se perde.</span></li>
-      <li><b>Priorizar os cursos críticos</b><span>${top3.length ? top3.join(', ') : 'Cursos com maior desistência'}.</span></li>
-      <li><b>Ir além do CPC</b><span>O CPC não separa os cursos que retêm dos que perdem. Investigar fatores do estudante (renda, trabalho, deslocamento) e o papel do financiamento, que essas bases não medem por aluno.</span></li>
-      <li><b>Ampliar o acesso</b><span>Polos e oferta presencial nos municípios sem graduação.</span></li></ol></div></div></div>
-   ${note('Fontes: INEP (Trajetória 2015–2024, Censo da Educação Superior 2021–2024, CPC 2021–2023, Enade 2025) e IBGE (Censo 2022). Associações entre cursos não provam causa. Gerado por scripts/build_fixed_data.py.')}`;
-  minis.forEach((m, k) => m.v.length ? sparkline($('mini' + k), m.v, m.cor) : null);
-  el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(PAGES.findIndex(p => p.id === b.dataset.go)));
-}});
-
 /* ---------- orquestração ---------- */
-const ORDEM = ['ans', 'p1', 'p2', 'p3', 'p4', 'p5', 'b1', 'b2', 'resumo', 'br'];
+const ORDEM = ['ans', 'p1', 'p2', 'p3', 'p4', 'p5', 'b1', 'b2', 'br'];
 PAGES.sort((x, y) => ORDEM.indexOf(x.id) - ORDEM.indexOf(y.id));
-function go(i) { onNavigate(PAGES[i].id); }
 function renderAll() {
   PAGES.forEach(p => {
     const el = $('pg-' + p.id);

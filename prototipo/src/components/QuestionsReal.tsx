@@ -103,7 +103,7 @@ export function RealQuestionsPage({current,chart,annual,selected,setSelected}:{c
   b1:`Há registros de oferta presencial em ${values.b1} municípios neste recorte de 2022. ${d.municipal_population?.length?'O mapa cruza vagas presenciais com a população municipal de 18–24 anos de 2022. Vagas por 100 jovens mede oferta relativa, não uma taxa de acesso.':'A população municipal ainda não foi publicada.'} Ausência de registro de oferta não comprova oferta zero.`,
   b2:`Financiamento e trajetória foram ligados em ${d.funding_relationship.length} cursos privados. FIES e ProUni aparecem separadamente; os dados não identificam o financiamento dos mesmos ingressantes de 2015 nem demonstram efeito causal.`,
  };
- return <>{(current==='ans'||current==='resumo')&&<>
+ return <>{current==='ans'&&<>
   <div className="qcards">{(Object.keys(descriptions) as Question[]).map(q=><button type="button" className={`qcard ${selected===q?'on':''}`} key={q} onClick={()=>setSelected(q)}>
   <span className={`qwm ${q.startsWith('b')?'bonus':''}`}>{q.toUpperCase()}</span><span className="qt">{descriptions[q]}</span><b>{values[q]}</b><span className="ql">{labels[q]}</span></button>)}</div>
   <div className="ans-panel"><div className="ans-head"><span className="tag">{selected.toUpperCase()}</span><h3>{descriptions[selected]}</h3></div><div className="ans-body"><p>{summaries[selected]}</p><div><p className="note">Fonte: INEP/IBGE · MT · dados consultados na API. As taxas agregadas usam os numeradores e denominadores do mesmo universo.</p></div></div></div>
