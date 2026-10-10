@@ -1,0 +1,1 @@
+"""Backend Rota do Diploma."""
