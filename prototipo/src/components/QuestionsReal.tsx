@@ -1,7 +1,8 @@
 import type {ReactNode} from 'react';
+import {MunicipalEvidence} from './MunicipalEvidence';
 import type {Dashboard,CourseRow} from '../api/dashboard';
 import type {AnalyticsData} from '../hooks/useAnalytics';
-import {Bars,Lines,Scatter,Distribution,Tree,MunicipalMap,palette,number,pct,ratio} from './RealCharts';
+import {Bars,Lines,Scatter,Distribution,Tree,palette,number,pct,ratio} from './RealCharts';
 import {SeriesChart} from './SeriesChart';
 import type {PageId} from '../pages';
 export function RealCard({title,hint,children}:{title:string;hint:string;children:ReactNode}){
@@ -62,10 +63,7 @@ export function QuestionEvidence({question,chart,annual}:{question:Question;char
    <RealCard title="Desistência × proficiência por curso" hint="Correspondência curso + IES; coorte 2015 e avaliados 2025, sem vínculo individual."><Scatter points={d.enade.map(r=>({label:courseLabel(r),x:r.dropout_pct,y:r.proficiency_pct,size:r.participants}))} xlabel="Desistência da coorte (%)" ylabel="Proficiência Enade 2025 (%)"/></RealCard>
    <RealCard title="Proficiência por licenciatura" hint="Proficientes / participantes de cada curso, com pelo menos 10 avaliados."><Bars rows={[...d.enade].sort((a,b)=>b.proficiency_pct-a.proficiency_pct).slice(0,10).map(r=>({label:courseLabel(r),value:r.proficiency_pct}))} percent/></RealCard></div></>;
  }else if(question==='b1'){
-  const totals=new Map<string,{label:string;value:number}>();for(const r of d.municipal){const v=totals.get(r.municipality)||{label:r.name,value:0};v.value+=r.vacancies;totals.set(r.municipality,v);}
-  evidence=<><p className="methodology">Oferta presencial de 2022 por município. Somente rede e município filtram este mapa. A população 18–24 disponível é estadual; vagas por 100 jovens e desertos municipais permanecem indisponíveis.</p>
-   <div className="grid c2"><RealCard title="Mapa de vagas presenciais reais" hint="Censo 2022, dimensão 1. Cinza indica ausência de registro neste recorte, não população zero."><MunicipalMap rows={d.municipal}/></RealCard>
-   <RealCard title="Maiores ofertas municipais" hint="Soma das vagas totais presenciais do arquivo, sem repetir dimensões."><Bars rows={[...totals.values()].sort((a,b)=>b.value-a.value).slice(0,12)}/></RealCard></div>
+  evidence=<><MunicipalEvidence rows={d.municipal}/>
    {annual?.population.records[0]&&<RealCard title="Complemento estadual · Censo 2022" hint="População e oferta no mesmo ano e UF; não recebe filtros municipais."><Bars rows={[{label:'População 18–19 anos',value:annual.population.records[0].qt_pop_18_19},{label:'População 20–24 anos',value:annual.population.records[0].qt_pop_20_24}]}/></RealCard>}</>;
  }else{
   const fy=[...new Set(d.finance.map(r=>r.year))].sort(),measure=(key:'matriculated'|'fies'|'prouni_full'|'prouni_partial',year:number)=>d.finance.filter(r=>r.year===year).reduce((s,r)=>s+r[key],0);

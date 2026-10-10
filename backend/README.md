@@ -106,7 +106,7 @@ O resolvedor pip verificou as versões fixadas e baixou wheels compatíveis com 
 
 Persistência, migrations e carga auditável implementadas. Os comandos de validação e filtros estão em [validacao_terminal.md](../docs/validacao_terminal.md). Modelos definitivos de domínio dependem dos dicionários oficiais; o staging técnico inicial preserva o payload completo.
 
-Entrega 3: expandir testes, padronizar erros e logs sem segredos, revisar segurança e preparar publicação Railway com porta PORT, rede privada e backend/ como raiz do serviço. A configuração local de deploy está preparada em Dockerfile, start.sh e railway.toml. Nenhum deploy remoto foi realizado nesta etapa; veja [deploy.md](../docs/deploy.md).
+Entrega 3: expandir testes, padronizar erros e logs sem segredos, revisar segurança e preparar publicação Railway com porta PORT, rede privada e backend/ como raiz do serviço. A configuração local de deploy está preparada em Railpack, start.sh e railway.toml. Nenhum deploy remoto foi realizado nesta etapa; veja [deploy.md](../docs/deploy.md).
 
 A ingestão é executada da raiz com `backend/.venv/bin/python -m pipelines.load`, depois das migrations. Consultas usam `python -m pipelines.query` no mesmo ambiente. Não há carga automática no startup.
 
@@ -129,3 +129,10 @@ curl --fail 'http://127.0.0.1:8000/api/v1/analytics/annual?year=2022&network=1&m
 ```
 
 Validação desta extensão: 41 testes passaram e 2 testes PostgreSQL opcionais foram ignorados na suíte padrão; Ruff passou. A comparação HTTP com CLI sobre os dados carregados confere 45 combinações de filtros e a população (`python -m pipelines.check_api`, na raiz e com o ambiente do backend). O bloco anterior de validação de 29 testes documenta a entrega de persistência, antes destes endpoints.
+
+
+## Gráficos reais e página Respostas
+
+GET `/api/v1/analytics/dashboard` publica os produtos calculados por `pipelines/dashboard.py` na tabela `analytics.dashboard_mt` (migration 0003). Filtros: network, modality, degree, area e municipality. Rede 1 pública/2 privada. Grau 1 bacharelado/2 licenciatura/3 tecnológico. O mapa municipal usa somente rede/município; o Censo anual continua com filtros próprios. O payload não inclui dados raw, caminhos ou registros pequenos suprimidos.
+
+A reconstrução/validação completa é reproduzível com `python -m pipelines.check_dashboard` na raiz, usando o ambiente do backend com os requirements das pipelines. O build inicial é explícito (`python -m pipelines.dashboard`), não acontece no startup. A API utiliza Python/SQLAlchemy; pandas roda na pipeline. O deploy foi simplificado para o build automático Railpack, sem Docker.

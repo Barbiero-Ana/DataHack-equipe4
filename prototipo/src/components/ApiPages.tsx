@@ -7,7 +7,7 @@ import type {Dashboard} from '../api/dashboard';
 import {AnnualTable} from './AnnualTable';
 import {RealQuestionsPage,QuestionEvidence} from './QuestionsReal';
 export function ApiPages({current,data,chart,loading,error,retry}:{current:PageId;data:AnalyticsData|null;chart:Dashboard|null;
- loading:boolean;error:string|null;retry:()=>void;navigate:(id:PageId)=>void;openDemo:()=>void}){
+ loading:boolean;error:string|null;retry:()=>void}){
  const [selected,setSelected]=useState<Question>('p1');
  const title=current==='br'?'Contexto de Mato Grosso':pages.find(p=>p.id===current)!.title;
  const incompatible=chart&&data&&chart.metadata.release_id!==data.catalog.metadata.release_id;

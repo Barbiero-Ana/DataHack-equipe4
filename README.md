@@ -4,7 +4,7 @@ Inteligência educacional para o DataHack UNIVAG 2026, com foco nas graduações
 
 As **Entregas 1 — Fundação e 2 — Persistência** estão implementadas. As migrations e o carregador das quatro camadas foram implementados e testados em PostgreSQL descartável. Consulte o registro de execução para saber a versão efetivamente carregada. Consulte [o guia do backend](backend/README.md) para instalação e execução.
 
-A arquitetura definida usa FastAPI no Railway, PostgreSQL 18 no Railway, React + Vite + TypeScript na Vercel e pipelines Python + pandas + SQL. A comunicação entre frontend e backend usa REST/JSON. O frontend oficial é o [protótipo existente](prototipo/README.md), adaptado a React/Vite/TypeScript; as telas demonstrativas e os indicadores da API estão explicitamente separados. Veja [a configuração de deploy](docs/deploy.md).
+A arquitetura definida usa FastAPI no Railway, PostgreSQL 18 no Railway, React + Vite + TypeScript na Vercel e pipelines Python + pandas + SQL. A comunicação entre frontend e backend usa REST/JSON. O frontend oficial é o [protótipo existente](prototipo/README.md), adaptado a React/Vite/TypeScript; as páginas e os gráficos de Respostas usam dados reais da API. Veja [a configuração de deploy](docs/deploy.md).
 
 Os códigos de leitura, limpeza, filtro e validação com pandas estão em [pipelines/](pipelines/README.md). Consulte [as regras de qualidade](docs/data_quality.md), [o mapa das perguntas](docs/questions.md) e [o inventário da execução](docs/data_inventory.md). Saídas locais em `outputs/quality/`. As inconsistências estão em [InconsistencciasDados.md](InconsistencciasDados.md); consulte [a validação](docs/validacao_dados.md) e [os contratos das fórmulas](docs/formulas_indicadores.md) para metodologia e próximos passos.
 

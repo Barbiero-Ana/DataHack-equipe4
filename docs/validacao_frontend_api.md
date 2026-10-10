@@ -1,27 +1,18 @@
-# Validação — API e migração do protótipo
+# Validação do frontend e da API
 
-Execução em 10/10/2026. Frontend oficial em `prototipo/`; o frontend separado criado durante a integração foi retirado. Cópia local do protótipo original em `outputs/migration/prototipo_original/`, ignorada pelo Git.
+Atualizado em 10/10/2026. Frontend oficial em `prototipo/`. A página Respostas apresenta as sete perguntas e seus gráficos reais.
 
 | Verificação | Resultado |
 | --- | --- |
-| TypeScript estrito + build Vite | Passou (`npm run build`) |
-| Testes backend | 41 passaram; 2 PostgreSQL opcionais ignorados |
-| Testes pipelines | 22 passaram; 2 PostgreSQL opcionais ignorados |
-| Ruff backend | Lint e formatação passaram |
-| API HTTP × CLI SQL no banco carregado | 45 combinações anuais e população passaram |
-| Módulos demonstrativos | Dez páginas renderizadas, 31 gráficos SVG no total, sem erros de JavaScript observados |
-| Desktop 1440 × 900 | Layout, navegação e tabelas conferidos; sem overflow horizontal da página |
-| Celular 390 × 844 | P3 conferida; largura/scrollWidth = 390; tabela usa scroll interno |
-| Rede privada/presencial em 2021 | 52.014 matrículas, 14.950 desvinculações, estimativa indisponível por falta do ano anterior |
-| B1 após filtro P3 de 2021/privada/presencial | Permaneceu UF 51/2022, todas as redes e presencial, conforme contrato |
-| B1 Censo + população | 397.671 pessoas de 18–24 anos; 84.508 vagas e 95.355 matrículas presenciais |
-| Configurações Vercel/Railway | JSON, TOML e script shell com sintaxe válida |
-| Inicialização da API com PORT | `start.sh` usando o ambiente Python instalado: PORT=8002, `/health/live` 200; processo de teste encerrado |
+| TypeScript e build Vite | Passaram |
+| Backend e pipelines | 72 testes passaram; quatro opcionais PostgreSQL ignorados |
+| Dashboard pandas × PostgreSQL | Sete conjuntos idênticos |
+| Dashboard HTTP × cálculos | Seis combinações de filtros passaram |
+| Filtros inválidos | Quatro casos retornaram 422 |
+| API anual e população × SQL | 45 combinações passaram na validação anterior |
+| Respostas no navegador | Sete perguntas abertas; 22 gráficos renderizados |
+| JavaScript | Nenhum erro observado na conferência |
 
-Versão conferida: `a1e9a162-edb5-4d75-91ff-c6d07f7a96ac`, contrato `1.0.1`. O comando reproduzível de comparação está em `pipelines/check_api.py`; os comandos de consulta/validação existentes continuam disponíveis.
+Comandos, cobertura e limites: [graficos_reais.md](graficos_reais.md). Relatório: `outputs/dashboard/validation.json`. Publicação: [deploy.md](deploy.md).
 
-O build separa a demonstração em um chunk carregado sob demanda. Os renderizadores originais continuam em JavaScript ES modules, isolados do React e das respostas da API; a conversão completa desses renderizadores para componentes TypeScript não foi feita nesta etapa. As telas que recebem dados reais e a navegação usam React/TypeScript. O modo inicial usa API; a demonstração tem identificação permanente de simulação.
-
-A imagem Docker não foi construída nesta máquina, onde Docker não estava disponível. A inicialização, os requirements existentes e a sintaxe da configuração foram verificados; build da imagem e funcionamento na plataforma ainda precisam ser conferidos na primeira publicação. Não houve deploy remoto ou alteração de variáveis de serviços nesta etapa.
-
-Evidências visuais locais em `outputs/migration/prototipo_api_desktop.png`, `prototipo_api_mobile.png` e `prototipo_demo_desktop.png`. Esses arquivos não entram no Git. Orientações de publicação em [deploy.md](deploy.md) e organização em [prototipo/README.md](../prototipo/README.md).
+Backend Python/Railpack, sem Docker. Nenhum deploy remoto novo nesta etapa. Protótipo original preservado na cópia local ignorada pelo Git `outputs/migration/prototipo_original/`.

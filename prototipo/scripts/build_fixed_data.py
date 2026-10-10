@@ -181,7 +181,11 @@ def load_enade() -> pd.DataFrame:
         "MOD": df["MODALIDADE_DE_ENSINO"].astype(str).str.strip(),
         "PART": num(df[next(c for c in df.columns if c.endswith("DE_CONCLUINTES_PARTICIPANTES"))]),
         "PROF": num(df["TOTAL_DE_CONCLUINTE_IGUAL_OU_ACIMA_DO_PADRAO_1_DE_PROFICIENCIA"]),
+        "CAT": df[next(c for c in df.columns if c.startswith("CATEGORIA_ADMINISTRATIVA"))].astype(str)
+                 .str.replace("\u200b", "", regex=False).str.strip(),
+        "MUN": as_int(num(df["CODIGO_DO_MUNICIPIO"])),
     })
+    d["REDE"] = np.where(d["CAT"].str.startswith("Púb"), "publica", np.where(d["CAT"].str.startswith("Priv"), "privada", None))
     return d[(d["UF"] == "MT") & d["PART"].gt(0) & d["PROF"].notna()]
 
 
@@ -236,9 +240,10 @@ def main() -> None:
 
     enade = load_enade()
     en = enade[enade["CO_CURSO"].isin(ids)]
-    enade_out = {int(r.CO_CURSO): [r.AREA.title(), int(r.PART), int(r.PROF), r.MOD] for r in en.itertuples()}
+    enade_out = [[int(r.CO_CURSO), r.AREA.title(), int(r.PART), int(r.PROF), "ead" if "dist" in r.MOD.lower() else "presencial",
+                  r.REDE, int(r.MUN) if pd.notna(r.MUN) else None, bool(r.CO_CURSO in ids)] for r in enade.itertuples()]
     audit["enade_licenciaturas_mt_validas"] = int(len(enade))
-    audit["enade_ligados_a_trajetoria"] = len(enade_out)
+    audit["enade_ligados_a_trajetoria"] = int(en["CO_CURSO"].nunique())
     audit["enade_area_mt"] = {a.title(): [int(g.PART.sum()), int(g.PROF.sum())] for a, g in enade.groupby("AREA")}
 
     data = {

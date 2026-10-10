@@ -4,7 +4,7 @@ Monorepo: `prototipo/` é o frontend React/Vite; `backend/` é a API FastAPI; `p
 
 ## 1. Backend Railway
 
-Configure o serviço da API com **Root Directory `/backend`** e **Config File Path `/backend/railway.toml`**, porque a localização do arquivo de configuração não acompanha automaticamente a raiz do serviço. O Dockerfile usa esse diretório como contexto, instala os requirements de produção e copia somente a aplicação e o script de inicialização. Dados, saídas, ambientes virtuais e segredos não entram na imagem.
+Configure o serviço da API com **Root Directory `/backend`** e **Config File Path `/backend/railway.toml`**, porque a localização do arquivo de configuração não acompanha automaticamente a raiz do serviço. O builder Railpack detecta o projeto Python e instala os requirements de produção. `.python-version` fixa Python 3.12. `start.sh` inicia a API. Não é necessário Docker. Dados, saídas locais e segredos ficam fora do Git.
 
 O processo executa Uvicorn em `0.0.0.0` usando `PORT`, recebido do Railway; fora da plataforma o padrão é 8000. O healthcheck `/health/ready` verifica a conexão PostgreSQL. Ele não verifica a publicação de um dataset: após o deploy, consulte também o catálogo analítico.
 
@@ -19,7 +19,7 @@ Variáveis do serviço:
 
 Use o nome real do serviço de banco se ele não for `Postgres`. No Railway, DATABASE_URL deve usar o endereço da rede privada. O túnel `127.0.0.1:51911` é apenas para desenvolvimento local.
 
-Migrations e carga continuam como operação explícita a partir do repositório completo. O container da API não inclui as pipelines nem roda Alembic automaticamente; a migration 0002 precisa de `sql/` na raiz do checkout. Antes de publicar a API sobre um banco novo, siga [a persistência](execucao_persistencia.md) e [a validação pelo terminal](validacao_terminal.md). Em banco já carregado, preserve a versão ativa. Nunca recrie/copie o banco apenas para subir o frontend.
+Migrations e carga continuam como operação explícita a partir do repositório completo. A API não roda pipelines ou Alembic automaticamente; a migration 0002 precisa de `sql/` na raiz do checkout. Antes de publicar a API sobre um banco novo, siga [a persistência](execucao_persistencia.md) e [a validação pelo terminal](validacao_terminal.md). Em banco já carregado, preserve a versão ativa. Nunca recrie/copie o banco apenas para subir o frontend.
 
 ## 2. Frontend Vercel
 
@@ -38,7 +38,7 @@ curl --fail https://DOMINIO-DA-API/api/v1/analytics/catalog
 curl --fail 'https://DOMINIO-DA-API/api/v1/analytics/annual?year=2022&network=1&modality=1'
 ```
 
-Na Vercel, abra **Dados da API → P3**, confira todas as redes/modalidades, filtre 2021 e confirme que a estimativa ausente não vira zero. Abra B1 e confira o recorte estadual fixo de 2022. Confira as dez páginas em Demonstração, com a identificação permanente de dados simulados. Para reproduzir a comparação dos filtros HTTP com o banco local configurado, execute da raiz:
+Na Vercel, abra **Respostas** e selecione as sete perguntas para conferir os gráficos reais. Na P3, confira rede/modalidade/ano e a estimativa ausente de 2021. Na B1, confira vagas municipais de 2022 e o complemento populacional estadual. A interface não carrega o modo de demonstração. Para reproduzir a comparação dos filtros HTTP com o banco local configurado, execute da raiz:
 
 ```sh
 backend/.venv/bin/python -m pipelines.check_api --base-url http://127.0.0.1:8000
@@ -47,3 +47,13 @@ backend/.venv/bin/python -m pipelines.check_api --base-url http://127.0.0.1:8000
 O comando faz consultas somente de leitura e compara as 45 combinações de filtros anuais e o cruzamento de população com a CLI SQL. Para apontá-lo à API publicada, use seu endereço HTTPS e conecte o ambiente local ao mesmo banco/versão, sem compartilhar credenciais.
 
 Referências consultadas: [Vite na Vercel](https://vercel.com/docs/frameworks/frontend/vite) e [configuração em código no Railway](https://docs.railway.com/config-as-code/reference).
+
+
+Depois da migration 0003 e da carga das fontes, publique os produtos gráficos da raiz do checkout completo:
+
+```sh
+backend/.venv/bin/python -m pipelines.dashboard
+backend/.venv/bin/python -m pipelines.check_dashboard
+```
+
+A pipeline utiliza pandas já instalado pelos requirements de `pipelines/`; a API não precisa dessa dependência. O novo endpoint `/api/v1/analytics/dashboard` deve retornar 200 antes de validar Respostas no front. Nenhum deploy remoto foi realizado nesta execução.

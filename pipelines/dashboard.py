@@ -37,7 +37,12 @@ def unique(frame, keys):
 
 def trajectory(frame):
     data = safe(frame)
-    data = data.loc[data["NU_ANO_INGRESSO"].eq(2015)].copy()
+    data = data.loc[
+        data["NU_ANO_INGRESSO"].eq(2015)
+        & data["TP_MODALIDADE_ENSINO"].eq("1")
+        & data["CO_UF"].eq("51")
+        & data["NU_ANO_REFERENCIA"].between(2015, 2024)
+    ].copy()
     unique(data, KEY + ["NU_ANO_INGRESSO", "NU_ANO_REFERENCIA"])
     counts = ["QT_INGRESSANTE", "QT_PERMANENCIA", "QT_CONCLUINTE", "QT_DESISTENCIA", "QT_FALECIDO"]
     if (

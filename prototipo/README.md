@@ -1,10 +1,8 @@
-# Frontend — protótipo Rota do Diploma
+# Frontend — Rota do Diploma
 
-Frontend oficial em `prototipo/`, adaptado a React + Vite + TypeScript. A identidade visual, os assets, as dez páginas, os mapas e os gráficos do protótipo existente foram preservados. Não há um segundo frontend.
+Frontend oficial em `prototipo/`, com React + Vite + TypeScript e identidade visual do protótipo original. A página **Respostas** e as páginas individuais usam os dados reais publicados pela API. O modo simulado foi retirado da interface.
 
 ## Executar
-
-Use Node 24 LTS ou versão compatível com o campo `engines` do package.json:
 
 ```sh
 cd prototipo
@@ -12,38 +10,47 @@ npm ci
 npm run dev
 ```
 
-Acesse http://127.0.0.1:5173/. Execute a API em http://127.0.0.1:8000/ em outro terminal. O proxy de desenvolvimento envia `/api` para a API, evitando configuração CORS local. `npm run build` verifica TypeScript e gera `dist/`. `npm run preview` serve o build; para testar dados nesse modo, use `VITE_API_BASE_URL` absoluto e configure CORS na API, pois o proxy é somente de desenvolvimento.
+Node 24 LTS; abra http://127.0.0.1:5173/. Execute a API na porta 8000 em outro terminal. O proxy local encaminha `/api` ao backend. `npm run build` verifica TypeScript e gera `dist/`.
+
+## Gráficos reais
+
+| Pergunta | Gráficos |
+| --- | --- |
+| P1 | Trajetória acumulada, desistências anuais, situação final, ingressantes por rede |
+| P2 | Treemap por curso/área, taxa ponderada por área, ranking por curso |
+| P3 | Matrículas e estimativa anual, tabela com componentes da fórmula |
+| P4 | CPC × desistência, faixas CPC e associações Spearman dos componentes |
+| P5 | Situação das licenciaturas, proficiência dos avaliados, associação e ranking por curso |
+| B1 | Mapa de vagas reais por município, ranking de oferta e população estadual por faixa etária |
+| B2 | Contagens e participação FIES/ProUni, associação por curso e faixas de participação FIES |
+
+Em **Respostas**, cada cartão seleciona a síntese e os mesmos gráficos reais da pergunta. As taxas usam os numeradores e denominadores agregados. Enade 2025 e trajetória 2015 são populações diferentes: não há funil que multiplique suas taxas. FIES/ProUni permanecem separados, sem somar possíveis beneficiários sobrepostos.
+
+A coorte publicada é 2015, presencial, observada até 2024. Produtos de curso excluem coortes menores que 10; CPC/Enade também exigem pelo menos 10 participantes. Exclusões e cobertura estão disponíveis na tela e na auditoria. A estimativa de evasão de 2021 permanece ausente sem Censo 2020.
+
+B1 mostra vagas reais municipais de 2022; cinza representa ausência de registro no recorte. A população disponível é estadual: não há mapa de vagas por 100 jovens nem contagem de desertos municipais. A aba Contexto MT informa que não existem totais nacionais na versão carregada.
 
 ## Organização
 
-| Caminho | Responsabilidade |
-| --- | --- |
-| `src/App.tsx` | Navegação, modo de dados e filtros React |
-| `src/pages.ts` | Ordem e identificação das dez páginas |
-| `src/api/` | Cliente REST e contratos TypeScript |
-| `src/hooks/useAnalytics.ts` | Carregamento, cancelamento e conferência da versão dos dados |
-| `src/components/ApiPages.tsx` | Apresentação dos indicadores do banco |
-| `src/components/SeriesChart.tsx` | Gráficos React/SVG dos indicadores reais |
-| `src/components/AnnualTable.tsx` | Tabela com componentes da fórmula |
-| `src/components/DemoPages.tsx` | Integração isolada com os gráficos existentes |
-| `src/demo/` | Dados simulados, geometria e renderizadores originais em ES modules |
-| `src/styles.css` | CSS original e ajustes de integração/responsividade |
-| `public/` | Logos e ícone originais |
+- `src/App.tsx`: navegação e filtros reais.
+- `src/api/`: contratos e cliente REST.
+- `src/hooks/`: requisições canceláveis e conferência de versão.
+- `src/components/ApiPages.tsx`: páginas conectadas à API.
+- `src/components/QuestionsReal.tsx`: respostas e cálculos de apresentação.
+- `src/components/RealCharts.tsx`: gráficos React/SVG e adaptação dos mapas/treemap originais.
+- `src/visualization/`: primitivas SVG e geometria preservadas do protótipo, usadas com dados reais.
+- `src/demo/` e `DemoPages.tsx`: referência da versão antiga; não importados pelo App e não incluídos no bundle servido.
+- `src/styles.css` e `public/`: CSS, marca e imagens originais.
 
-A migração é incremental: o shell, os controles e as telas que recebem API estão em React/TypeScript; os renderizadores demonstrativos permanecem em JavaScript modularizado. `allowJs` permite o reuso; `checkJs` está desativado apenas para essa compatibilidade. O TypeScript permanece estrito para os módulos `.ts`/`.tsx`. Não se trata de uma conversão completa dos renderizadores antigos para componentes React. A ilha de demonstração escreve somente nas seções que controla, monta/desmonta com React e não injeta respostas da API em templates HTML.
+Os dados vêm de `/api/v1/analytics/dashboard`, `/annual` e `/population`. O produto dashboard é calculado por pandas em `pipelines/dashboard.py` e persistido em `analytics.dashboard_mt`. Não há dados oficiais embutidos no código JavaScript.
 
-## Dados e filtros
+## Publicar e validar
 
-O modo inicial **Dados da API** consulta a versão ativa no banco. A P3 permite ano, rede (1 pública, 2 privada) e modalidade (1 presencial, 2 EAD). A tabela apresenta matrículas, desvinculações, estimativa anual, disponibilidade e os componentes para conferir a fórmula. A estimativa de 2021 fica indisponível quando falta Censo 2020; nunca vira zero. As linhas dos gráficos não atravessam anos ausentes.
+[Deploy Vercel/Railway](../docs/deploy.md), usando Railpack no backend, sem Docker. Na Vercel, `VITE_API_BASE_URL` recebe somente a URL pública da API com `/api/v1`; nunca credenciais PostgreSQL. Não existem rewrites para navegação por hash. Dados, builds, `.env` e `node_modules` ficam fora do Git.
 
-A B1 mostra o cruzamento Censo/população de 2022 **somente na UF 51**, todas as redes e modalidade presencial. Ela não recebe os filtros da P3. A população estadual não é distribuída artificialmente por município. As demais perguntas mostram a situação dos produtos analíticos, sem apresentar simulações como conclusões oficiais.
+```sh
+# Na raiz do repositório, com API local e banco configurados:
+backend/.venv/bin/python -m pipelines.check_dashboard
+```
 
-**Demonstração** mantém o visual e as interações das dez telas originais, com uma faixa permanente indicando valores simulados e fontes identificadas como simulação. Os filtros Grau, Área e Polo atuam apenas na demonstração enquanto os produtos analíticos correspondentes não estiverem publicados. As conclusões desse modo servem para revisar o protótipo; não são resultados das bases.
-
-Requisições antigas são canceladas ao mudar filtros; os resultados do filtro anterior são removidos enquanto a nova consulta carrega. Catálogo, indicadores anuais e população devem ter a mesma `release_id`; se a versão mudar entre chamadas, a tela pede nova consulta. Erros de conexão têm mensagem e botão para tentar novamente; nenhuma simulação substitui silenciosamente uma falha.
-
-## Publicar
-
-Veja [deploy Vercel + Railway](../docs/deploy.md). `VITE_API_BASE_URL` é pública e recebe apenas o endereço HTTP da API, por exemplo `https://DOMINIO-DA-API/api/v1`. Nunca coloque credenciais ou DATABASE_URL em variáveis VITE. `.env.example` contém a configuração local. `dist/`, `node_modules/` e `.env` ficam fora do Git.
-
-Uma cópia do protótipo anterior à migração foi preservada localmente em `outputs/migration/prototipo_original/`, fora do Git.
+Cópia do protótipo original em `outputs/migration/prototipo_original/`, ignorada pelo Git. Registro dos gráficos, cobertura e validação em [graficos_reais.md](../docs/graficos_reais.md).

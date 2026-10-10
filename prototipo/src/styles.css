@@ -185,3 +185,10 @@ button:disabled{opacity:.4;cursor:default}
 @media(max-width:1000px){.fpane{top:87px}.data-banner{min-height:35px;padding:5px 10px}}
 @media(max-width:560px){.top{height:auto;min-height:52px;flex-wrap:wrap;padding:8px 10px}.brand img{height:28px;width:28px}.mode-switch button{font-size:10px;padding:6px 8px}.top>.ghost{font-size:10px;padding:6px 8px}.fpane{top:100px}.data-banner{font-size:10px}.stats{grid-template-columns:1fr}.page-head{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.track,.fpane{transition:none}}
+
+.map-indicators{flex-wrap:wrap;max-width:100%}
+.map-indicators button:disabled{opacity:.5;cursor:not-allowed}
+.map-scale{display:flex;gap:0;flex-wrap:wrap}
+.map-scale>span{display:flex;flex-direction:column;align-items:center;min-width:48px;gap:3px}
+.map-scale i{width:100%;height:12px;border-radius:0;margin:0}
+.map-details{margin-top:14px;padding:12px;background:var(--bg,#f5f4f6);border-radius:8px}

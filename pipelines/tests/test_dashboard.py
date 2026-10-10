@@ -9,6 +9,7 @@ def sample():
     for year in (2015, 2016):
         rows.append(
             {
+                "CO_UF": "51",
                 "CO_IES": "1",
                 "CO_CURSO": "100",
                 "NO_CURSO": "Curso real",

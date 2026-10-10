@@ -38,7 +38,7 @@ export default function App(){
   <div className="top-title">Rota do Diploma</div><span className="live-source">Dados reais · INEP/IBGE</span>
   <button type="button" className={`ghost ${filtersOpen?'on':''}`} aria-expanded={filtersOpen} aria-controls="fpane" onClick={()=>setFiltersOpen(!filtersOpen)}><i className="fi fi-rr-filter"/>Filtros</button></header>
   <div className="data-banner api" role="status">Dados reais · INEP/IBGE · Mato Grosso · cálculos e cruzamentos auditáveis na API.</div>
-  <div className="body"><ApiPages current={current} data={annual.data} chart={dashboard.data} loading={dashboard.loading||(current==='p3'&&annual.loading)} error={dashboard.error||(current==='p3'?annual.error:null)} retry={()=>setRevision(v=>v+1)} navigate={navigate} openDemo={()=>{}}/>
+  <div className="body"><ApiPages current={current} data={annual.data} chart={dashboard.data} loading={dashboard.loading||(current==='p3'&&annual.loading)} error={dashboard.error||(current==='p3'?annual.error:null)} retry={()=>setRevision(v=>v+1)}/>
    <aside className={`fpane ${filtersOpen?'open':''}`} id="fpane" aria-label="Filtros" aria-hidden={!filtersOpen} inert={!filtersOpen}>
     <div className="fp-head"><strong>Filtros</strong><span>Aplicados aos gráficos reais</span></div>
     {current==='p3'&&<label>Ano<select value={filters.year} onChange={e=>setFilters({...filters,year:e.target.value})}><option value="">Todos</option>{annual.catalog?.annual_years.map(y=><option value={y} key={y}>{y}</option>)}</select></label>}
