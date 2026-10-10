@@ -1,6 +1,6 @@
 # Frontend — Rota do Diploma
 
-Frontend oficial em `prototipo/`, com React + Vite + TypeScript e identidade visual do protótipo original. A página **Respostas** e as páginas individuais usam os dados reais publicados pela API. O modo simulado foi retirado da interface.
+Frontend oficial em `prototipo/`, com React + Vite + TypeScript e identidade visual do protótipo original. O seletor no topo alterna entre **Dados da API** (consulta o backend) e **Dados fixos** (valores reais e estáticos, calculados das bases oficiais e embutidos no site). Não há mais dados simulados. `?dados=fixos` na URL abre direto no modo fixo.
 
 ## Executar
 
@@ -39,7 +39,7 @@ B1 mostra vagas reais municipais de 2022; cinza representa ausência de registro
 - `src/components/QuestionsReal.tsx`: respostas e cálculos de apresentação.
 - `src/components/RealCharts.tsx`: gráficos React/SVG e adaptação dos mapas/treemap originais.
 - `src/visualization/`: primitivas SVG e geometria preservadas do protótipo, usadas com dados reais.
-- `src/demo/` e `DemoPages.tsx`: referência da versão antiga; não importados pelo App e não incluídos no bundle servido.
+- `src/demo/` e `DemoPages.tsx`: modo **Dados fixos**. `fixed-data.json` é gerado por `scripts/build_fixed_data.py`; `fixed.js` faz os cálculos com filtros; `renderer.js` monta as dez páginas; `fixedCharts.js` tem as variantes de gráfico desse modo. Carregado sob demanda (chunk separado).
 - `src/styles.css` e `public/`: CSS, marca e imagens originais.
 
 Os dados vêm de `/api/v1/analytics/dashboard`, `/annual` e `/population`. O produto dashboard é calculado por pandas em `pipelines/dashboard.py` e persistido em `analytics.dashboard_mt`. Não há dados oficiais embutidos no código JavaScript.
@@ -54,3 +54,13 @@ backend/.venv/bin/python -m pipelines.check_dashboard
 ```
 
 Cópia do protótipo original em `outputs/migration/prototipo_original/`, ignorada pelo Git. Registro dos gráficos, cobertura e validação em [graficos_reais.md](../docs/graficos_reais.md).
+
+## Dados fixos
+
+Valores reais, sem API. Para regenerar a partir de `/dados` (na raiz, com pandas e openpyxl):
+
+```sh
+backend/.venv/bin/python prototipo/scripts/build_fixed_data.py
+```
+
+O script lê a trajetória (coorte 2015, Brasil), o Censo 2021–2024 de MT, CPC 2021–2023, Enade 2025 e `Idades_tratadas.xlsx`, e grava `src/demo/fixed-data.json` com hashes das fontes e auditoria. A população municipal de 18–24 anos vem do IBGE (Censo 2022, tabela SIDRA 9514), salva em `scripts/fontes/`; o script interrompe se a soma dos municípios não conferir com o total estadual do arquivo de idades. Fórmulas: [formulas_indicadores.md](../docs/formulas_indicadores.md). Cache de leitura em `outputs/fixed_data_cache/` (fora do Git).

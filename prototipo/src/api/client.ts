@@ -1,9 +1,10 @@
 import type {AnalysisFilters, Dashboard} from './dashboard';
 import type {AnnualResponse, Catalog, Filters, PopulationResponse} from './types';
+import {fetchRead} from './retry';
 
 const base = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 async function get<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`${base}/analytics/${path}`, {signal, cache: 'no-store', headers: {Accept: 'application/json'}});
+  const response = await fetchRead(`${base}/analytics/${path}`, signal);
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const detail = body?.detail;

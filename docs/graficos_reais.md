@@ -6,7 +6,7 @@ Implementado em 10/10/2026. **Respostas** apresenta 22 gráficos reais, selecion
 | --- | --- |
 | P1 | Trajetória anual, desistências anuais, situação final, ingressantes por rede |
 | P2 | Cursos por área, desistência ponderada por área, ranking de cursos |
-| P3 | Estimativa anual e quantidade de desvinculações |
+| P3 | Matrículas e estimativa anual; desvinculações na tabela da página P3 |
 | P4 | CPC × desistência, faixas oficiais de CPC; tabela adicional de correlações dos componentes |
 | P5 | Resultados da coorte, proficiência dos avaliados, associação entre cursos, proficiência por curso |
 | B1 | Mapa de vagas, comparação municipal, população estadual por idade |
@@ -40,3 +40,11 @@ P3 mantém a estimativa de 2021 indisponível sem Censo 2020. B1 relaciona ofert
 FIES, ProUni integral e parcial são exibidos separadamente; não se somam como pessoas distintas. Qualidade, financiamento e trajetória usam populações e períodos identificados na interface. Associações não demonstram causalidade.
 
 Docker foi retirado. Backend Python/Railpack para Railway e frontend Vite para Vercel. A validação foi local, conectada ao banco existente; nenhum novo deploy remoto foi realizado.
+
+## Controles do B1
+
+Restaurados filtro local de rede (pública = 1, privada = 2), consulta municipal, indicadores de vagas/matrículas/menor oferta absoluta e legenda numérica. Rede atualiza mapa, totais e ranking conjuntamente; combina-se com o recorte dos filtros gerais. Os indicadores populacionais ficam desabilitados enquanto a população municipal não estiver disponível. A menor oferta destaca até 15 municípios com vagas positivas; empates são ordenados pelo nome.
+
+Validação na interface: rede pública = 38 municípios, 17.223 vagas e 45.706 matrículas; Cuiabá pública = 4.409 vagas e 11.943 matrículas. Valores conferidos com a API. Alternância para matrículas atualizou a legenda; menor oferta destacou 15 municípios. Build TypeScript/Vite passou e não foram observados erros de JavaScript. Evidências: `outputs/dashboard/b1_controles.png` e `b1_legenda.png`.
+
+Roteiro oral: [roteiro_apresentacao.md](roteiro_apresentacao.md).

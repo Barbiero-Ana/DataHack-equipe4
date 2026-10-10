@@ -1,15 +1,19 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {ApiPages} from './components/ApiPages';
+import {DemoPages} from './components/DemoPages';
+import {AREAS,LOCAIS} from './demo/options';
 import {Tooltip} from './components/Tooltip';
 import {useAnalytics} from './hooks/useAnalytics';
 import {useDashboard} from './hooks/useDashboard';
 import {defaultAnalysisFilters} from './api/dashboard';
 import type {AnalysisFilters} from './api/dashboard';
 import type {Code,Filters} from './api/types';
-import {pages} from './pages';
-import type {PageId} from './pages';
+import {defaultDemoFilters,pages} from './pages';
+import type {DemoFilters,Mode,PageId} from './pages';
 function hashPage():PageId{return pages.find(p=>`#${p.id}`===location.hash)?.id||'ans';}
 export default function App(){
+ const [mode,setMode]=useState<Mode>(()=>new URLSearchParams(location.search).get('dados')==='fixos'?'demo':'api');
+ const [fixedFilters,setFixedFilters]=useState<DemoFilters>(defaultDemoFilters);
  const [current,setCurrent]=useState<PageId>(hashPage);
  const [filtersOpen,setFiltersOpen]=useState(false);
  const [filters,setFilters]=useState<Filters>({year:'',network:'',modality:''});
@@ -32,15 +36,23 @@ export default function App(){
   tabs.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({inline:'nearest',block:'nearest'});
   return()=>{window.removeEventListener('hashchange',hash);document.removeEventListener('keydown',keyboard);};
  },[index,navigate]);
- const reset=()=>{setFilters({year:'',network:'',modality:''});setAnalysisFilters({...defaultAnalysisFilters});};
+ const reset=()=>{if(mode==='demo'){setFixedFilters({...defaultDemoFilters});return;}setFilters({year:'',network:'',modality:''});setAnalysisFilters({...defaultAnalysisFilters});};
+ const setFixed=(key:keyof DemoFilters,value:string)=>setFixedFilters(previous=>({...previous,[key]:value}));
  const setShared=(key:'network'|'modality',value:string)=>{setFilters({...filters,[key]:value as ''|Code});setAnalysisFilters({...analysisFilters,[key]:value});};
  return <><div className="app"><header className="top"><div className="brand"><img src="/image.png" alt="Rota do Diploma"/></div>
-  <div className="top-title">Rota do Diploma</div><span className="live-source">Dados reais · INEP/IBGE</span>
+  <div className="top-title">Rota do Diploma</div><div className="mode-switch seg" aria-label="Fonte dos dados"><button type="button" aria-pressed={mode==='api'} className={mode==='api'?'on':''} onClick={()=>setMode('api')}>Dados da API</button><button type="button" aria-pressed={mode==='demo'} className={mode==='demo'?'on':''} onClick={()=>setMode('demo')}>Dados fixos</button></div>
   <button type="button" className={`ghost ${filtersOpen?'on':''}`} aria-expanded={filtersOpen} aria-controls="fpane" onClick={()=>setFiltersOpen(!filtersOpen)}><i className="fi fi-rr-filter"/>Filtros</button></header>
-  <div className="data-banner api" role="status">Dados reais · INEP/IBGE · Mato Grosso · cálculos e cruzamentos auditáveis na API.</div>
-  <div className="body"><ApiPages current={current} data={annual.data} chart={dashboard.data} loading={dashboard.loading||(current==='p3'&&annual.loading)} error={dashboard.error||(current==='p3'?annual.error:null)} retry={()=>setRevision(v=>v+1)}/>
+  <div className={`data-banner ${mode}`} role="status">{mode==='demo'?'Dados fixos · INEP/IBGE · Mato Grosso · valores reais calculados das bases oficiais e embutidos no site (sem consulta à API).':'Dados reais · INEP/IBGE · Mato Grosso · cálculos e cruzamentos auditáveis na API.'}</div>
+  <div className="body">{mode==='demo'?<DemoPages filters={fixedFilters} current={current} navigate={navigate}/>:<ApiPages current={current} data={annual.data} chart={dashboard.data} loading={dashboard.loading||(current==='p3'&&annual.loading)} error={dashboard.error||(current==='p3'?annual.error:null)} retry={()=>setRevision(v=>v+1)}/>}
    <aside className={`fpane ${filtersOpen?'open':''}`} id="fpane" aria-label="Filtros" aria-hidden={!filtersOpen} inert={!filtersOpen}>
-    <div className="fp-head"><strong>Filtros</strong><span>Aplicados aos gráficos reais</span></div>
+    <div className="fp-head"><strong>Filtros</strong><span>{mode==='demo'?'Aplicados aos dados fixos':'Aplicados aos gráficos reais'}</span></div>
+    {mode==='demo'?<>
+    <label>Rede<select value={fixedFilters.rede} onChange={e=>setFixed('rede',e.target.value)}><option value="todas">Todas</option><option value="publica">Pública</option><option value="privada">Privada</option></select></label>
+    <label>Grau<select value={fixedFilters.grau} onChange={e=>setFixed('grau',e.target.value)}><option value="todos">Todos</option><option value="bacharelado">Bacharelado</option><option value="licenciatura">Licenciatura</option><option value="tecnologo">Tecnológico</option></select></label>
+    <label>Área (CINE)<select value={fixedFilters.area} onChange={e=>setFixed('area',e.target.value)}><option value="todas">Todas</option>{AREAS.map(a=><option key={a}>{a}</option>)}</select></label>
+    <label>Polo<select value={fixedFilters.local} onChange={e=>setFixed('local',e.target.value)}><option value="todos">Todos</option>{LOCAIS.map(a=><option key={a}>{a}</option>)}</select></label>
+    <p className="note">Trajetória: coorte 2015 presencial. P3 e B2 usam o Censo 2021–2024; B1, o Censo 2022 e a população do IBGE. Ausência de dado não vira zero.</p>
+    </>:<>
     {current==='p3'&&<label>Ano<select value={filters.year} onChange={e=>setFilters({...filters,year:e.target.value})}><option value="">Todos</option>{annual.catalog?.annual_years.map(y=><option value={y} key={y}>{y}</option>)}</select></label>}
     <label>Rede<select value={filters.network} onChange={e=>setShared('network',e.target.value)}><option value="">Todas</option><option value="1">Pública</option><option value="2">Privada</option></select></label>
     <label>Modalidade<select value={filters.modality} onChange={e=>setShared('modality',e.target.value)}><option value="">Todas</option><option value="1">Presencial</option><option value="2">EAD</option></select></label>
@@ -48,11 +60,12 @@ export default function App(){
     <label>Área (CINE)<select value={analysisFilters.area} onChange={e=>setAnalysisFilters({...analysisFilters,area:e.target.value})}><option value="">Todas</option>{dashboard.options?.areas.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
     <label>Município<select value={analysisFilters.municipality} onChange={e=>setAnalysisFilters({...analysisFilters,municipality:e.target.value})}><option value="">Todos</option>{dashboard.options?.municipalities.map(r=><option key={r.value} value={r.value}>{r.label}</option>)}</select></label></>}
     <p className="note">Trajetória: coorte 2015 presencial. P3: ano/rede/modalidade. Mapa B1: 2022, presencial, rede/município. Financiamento: rede privada. Ausência de resultado não vira zero.</p>
+    </>}
     <button type="button" onClick={reset}><i className="fi fi-rr-refresh"/>Limpar filtros</button>
    </aside></div>
-  <footer className="tabs"><div className="tab-list" ref={tabs} role="tablist" aria-label="Perguntas e análises">{pages.map(page=><button type="button" role="tab" aria-selected={current===page.id} className={`tab ${current===page.id?'on':''}`} key={page.id} onClick={()=>navigate(page.id)}>{page.id==='br'?'Contexto MT':page.label}</button>)}</div>
+  <footer className="tabs"><div className="tab-list" ref={tabs} role="tablist" aria-label="Perguntas e análises">{pages.map(page=><button type="button" role="tab" aria-selected={current===page.id} className={`tab ${current===page.id?'on':''}`} key={page.id} onClick={()=>navigate(page.id)}>{page.id==='br'&&mode==='api'?'Contexto MT':page.label}</button>)}</div>
    <img className="tabs-logo" src="/PandaLogoFull.png" alt="Pandas em Pânico"/>
    <button type="button" className="nav-btn" aria-label="Página anterior" disabled={index===0} onClick={()=>navigate(pages[index-1].id)}>‹</button>
    <button type="button" className="nav-btn" aria-label="Próxima página" disabled={index===pages.length-1} onClick={()=>navigate(pages[index+1].id)}>›</button><span className="count">{index+1} de {pages.length}</span></footer>
- </div><Tooltip key={current}/></>;
+ </div><Tooltip key={`${mode}-${current}`}/></>;
 }
