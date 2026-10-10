@@ -72,7 +72,7 @@ def test_postgres_migration_preserves_existing_data(
                 connection.execute(
                     text("SELECT version_num FROM public.alembic_version")
                 ).scalar_one()
-                == "0001_create_schemas"
+                == "0003_dashboard"
             )
     finally:
         engine.dispose()

@@ -1,8 +1,8 @@
-# Backend — Entregas 1 e 2
+# Backend — API e persistência
 
-Backend modular em Python, FastAPI, Pydantic v2 e Pydantic Settings, com persistência síncrona SQLAlchemy 2.x + psycopg 3 e Alembic. Não há modelos de dados INEP, pipelines ou frontend implementados.
+Backend modular em Python, FastAPI, Pydantic v2 e Pydantic Settings, com persistência síncrona SQLAlchemy 2.x + psycopg 3 e Alembic. As quatro camadas control, raw, staging e analytics possuem migrations e carga auditável em `../pipelines/`. A API publica os dois produtos diagnósticos de MT disponíveis na versão ativa.
 
-A arquitetura atual prevê frontend React + Vite + TypeScript, consumindo esta API por REST/JSON, e processamento Python + pandas + SQL. Veja [as decisões de arquitetura](../docs/architecture.md) para a stack completa e a evolução do monorepo.
+A arquitetura atual prevê frontend React + Vite + TypeScript, consumindo esta API por REST/JSON, e processamento Python + pandas + SQL. Veja [o plano das quatro camadas](../docs/migracao_banco.md) para a stack completa e a evolução do monorepo.
 
 ## Execução no macOS
 
@@ -40,7 +40,7 @@ As variáveis do processo têm precedência sobre `backend/.env`, localizado ind
 | --- | --- | --- |
 | APP_NAME | Rota do Diploma | Nome na documentação |
 | ENVIRONMENT | development | development, test ou production |
-| API_V1_PREFIX | /api/v1 | Prefixo dos futuros endpoints de domínio |
+| API_V1_PREFIX | /api/v1 | Prefixo dos endpoints analíticos |
 | CORS_ORIGINS | [] | Lista JSON de origens HTTP/HTTPS explícitas |
 | DATABASE_URL | ausente | URL PostgreSQL; obrigatória em produção |
 | DB_POOL_SIZE | 3 | Conexões persistentes por processo |
@@ -58,7 +58,7 @@ Exemplo: `CORS_ORIGINS=["http://localhost:3000"]`. Origens não podem conter cre
 
 O pool usa pre-ping, limites e timeouts. A criação da engine não abre conexão nem cria tabelas; o shutdown libera o pool. As sessões são fechadas ao fim da requisição e transações pendentes são desfeitas. A camada de aplicação deverá fazer commit explícito quando o caso de uso concluir. A dependência não faz commit automático. Falhas SQLAlchemy recebem 503 e geram somente um evento de log fixo, sem URLs, parâmetros ou traceback.
 
-Health checks ficam em `/health`, fora do prefixo versionado. O router `/api/v1` está reservado para funcionalidades concretas futuras. Não criamos services ou repositories sem responsabilidade real. Os testes e Ruff aqui são verificações mínimas para tornar a Entrega 1 revisável, sem antecipar a infraestrutura de qualidade/publicação completa da Entrega 3.
+Health checks ficam em `/health`, fora do prefixo versionado. O router `/api/v1/analytics` publica catálogo, indicadores anuais e o cruzamento de população/Censo. Schemas Pydantic definem os contratos; services verificam disponibilidade e procedência; repositories fazem consultas parametrizadas à versão ativa. Os testes e Ruff aqui são verificações mínimas para tornar a Entrega 1 revisável, sem antecipar a infraestrutura de qualidade/publicação completa da Entrega 3.
 
 As dependências resolvidas estão fixadas em `requirements.txt` e `requirements-dev.txt`. `pyproject.toml` declara os intervalos compatíveis e configura as ferramentas. Para executar sem ferramentas de desenvolvimento, instale apenas `requirements.txt`.
 
@@ -74,7 +74,7 @@ railway connect Postgres --tunnel-only --port 51911
 
 Preencha DATABASE_URL apenas em `.env`, no formato `postgresql+psycopg://USUARIO:SENHA@127.0.0.1:51911/BANCO`. Caracteres especiais no usuário/senha devem ser codificados para URL. Também aceitamos `postgresql://`, normalizado para psycopg 3 internamente. Não compartilhe o output do túnel: ele contém credenciais.
 
-Na API futura no Railway, use DATABASE_URL como referência ao serviço Postgres (`${{Postgres.DATABASE_URL}}`), com endereço privado; não use localhost, porta do túnel ou URL pública nesse ambiente. Defina ENVIRONMENT=production. Nenhum deploy ou mudança de variáveis remotas é realizado nesta entrega.
+Na API no Railway, use DATABASE_URL como referência ao serviço Postgres (`${{Postgres.DATABASE_URL}}`), com endereço privado; não use localhost, porta do túnel ou URL pública nesse ambiente. Defina ENVIRONMENT=production. Nenhum deploy ou mudança de variáveis remotas é realizado nesta entrega.
 
 Antes de qualquer migration, inspecione o banco e revise o SQL:
 
@@ -84,7 +84,7 @@ alembic heads
 alembic upgrade head --sql
 ```
 
-Somente após autorização para o banco principal, execute manualmente `alembic upgrade head`. Nada roda migrations no startup ou no deploy. A migration cria control, raw, staging e analytics com IF NOT EXISTS, além da tabela técnica public.alembic_version mantida pelo Alembic. O downgrade está bloqueado para preservar schemas preexistentes e possíveis dados. Veja [o guia do banco](../docs/database.md).
+Somente após autorização para o banco principal, execute manualmente `alembic upgrade head`. Nada roda migrations no startup ou no deploy. A primeira migration cria os quatro schemas com IF NOT EXISTS; a segunda cria o controle de carga, raw, staging técnico e os dois produtos analíticos diagnósticos. Alembic mantém public.alembic_version. O downgrade está bloqueado para preservar schemas preexistentes e possíveis dados. Veja [o plano de migração do banco](../docs/migracao_banco.md).
 
 ## Testes PostgreSQL opcionais
 
@@ -100,10 +100,32 @@ Esses testes criam os schemas, a tabela técnica Alembic e uma tabela sentinela 
 
 Em Python 3.13.7: os 13 testes anteriores foram preservados; a suíte ampliada tem 27 testes sem PostgreSQL e 2 testes de integração opcionais. Todos os 29 passaram usando a instância local descartável PostgreSQL 14.20 disponível nesta máquina. `ruff check .`, `ruff format --check .` e `pip check` passaram. O Starlette emite um aviso de depreciação do uso de HTTPX no TestClient; a suíte continua funcionando com HTTPX, conforme a stack solicitada. Revisar essa integração na Entrega 3.
 
-O resolvedor pip verificou as versões fixadas e baixou wheels compatíveis com Python 3.12/macOS ARM64; a execução da suíte em Python 3.12 ainda não foi realizada. O status da verificação PostgreSQL 18/Railway está registrado em docs/database.md.
+O resolvedor pip verificou as versões fixadas e baixou wheels compatíveis com Python 3.12/macOS ARM64; a execução da suíte em Python 3.12 ainda não foi realizada. A situação atual do código e a sequência de persistência estão em `docs/migracao_banco.md`; consulte `docs/execucao_persistencia.md` para a conexão e a carga verificadas nesta execução.
 
 ## Próximas entregas
 
-Persistência e migration inicial implementadas. Aplicar a migration no banco principal somente após revisar o inventário e receber autorização explícita. Modelos de domínio dependem dos dicionários oficiais.
+Persistência, migrations e carga auditável implementadas. Os comandos de validação e filtros estão em [validacao_terminal.md](../docs/validacao_terminal.md). Modelos definitivos de domínio dependem dos dicionários oficiais; o staging técnico inicial preserva o payload completo.
 
-Entrega 3: expandir testes, padronizar erros e logs sem segredos, revisar segurança e preparar publicação Railway com porta PORT, rede privada e backend/ como raiz do serviço. Nenhum deploy está configurado ou realizado agora.
+Entrega 3: expandir testes, padronizar erros e logs sem segredos, revisar segurança e preparar publicação Railway com porta PORT, rede privada e backend/ como raiz do serviço. A configuração local de deploy está preparada em Dockerfile, start.sh e railway.toml. Nenhum deploy remoto foi realizado nesta etapa; veja [deploy.md](../docs/deploy.md).
+
+A ingestão é executada da raiz com `backend/.venv/bin/python -m pipelines.load`, depois das migrations. Consultas usam `python -m pipelines.query` no mesmo ambiente. Não há carga automática no startup.
+
+
+## API analítica e frontend
+
+O frontend oficial está em [prototipo/](../prototipo/README.md), com React + Vite + TypeScript e reaproveitamento dos gráficos originais. Em desenvolvimento, o proxy do Vite aponta para esta API na porta 8000.
+
+| Endpoint GET | Filtros | Produto |
+| --- | --- | --- |
+| `/api/v1/analytics/catalog` | nenhum | Anos, redes, modalidades e versão ativa |
+| `/api/v1/analytics/annual` | year, network, modality | Comparativo anual MT (P3) |
+| `/api/v1/analytics/population` | year | Censo/população estadual (2022) |
+
+Rede: `1` pública, `2` privada. Modalidade: `1` presencial, `2` EAD. Os resultados incluem `release_id`, versão do contrato, recorte geográfico e pendências. A estimativa anual e suas bases podem ser nulas; quantidade de desvinculações é uma medida separada. Filtros de curso, município ou outros parâmetros não suportados retornam 422, evitando recortes falsamente apresentados como filtrados. Falta de dataset ativo retorna 503 seguro. Nenhum endpoint publica caminhos locais, credenciais ou payloads raw.
+
+```sh
+curl --fail http://127.0.0.1:8000/api/v1/analytics/catalog
+curl --fail 'http://127.0.0.1:8000/api/v1/analytics/annual?year=2022&network=1&modality=1'
+```
+
+Validação desta extensão: 41 testes passaram e 2 testes PostgreSQL opcionais foram ignorados na suíte padrão; Ruff passou. A comparação HTTP com CLI sobre os dados carregados confere 45 combinações de filtros e a população (`python -m pipelines.check_api`, na raiz e com o ambiente do backend). O bloco anterior de validação de 29 testes documenta a entrega de persistência, antes destes endpoints.

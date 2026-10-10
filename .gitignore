@@ -20,12 +20,16 @@ dist/
 
 # Dados e saídas locais: manter código, regras e inventários no repositório.
 /data/
+/dados/
+/dadosm/
 /datasets/
 /outputs/
 /backend/data/
 /backend/datasets/
 /backend/outputs/
 *.csv
+*.[Cc][Ss][Vv]
+*.[Oo][Dd][Ss]
 *.tsv
 *.xls
 *.xlsx
@@ -41,3 +45,7 @@ dist/
 *.rar
 *.tar
 *.gz
+
+# Frontend
+node_modules/
+prototipo/dist/
