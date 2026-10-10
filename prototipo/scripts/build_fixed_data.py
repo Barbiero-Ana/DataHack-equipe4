@@ -25,6 +25,8 @@ CACHE = ROOT / "outputs" / "fixed_data_cache"
 FONTES = Path(__file__).resolve().parent / "fontes"
 OUT = ROOT / "prototipo" / "src" / "demo" / "fixed-data.json"
 UF_MT = 51
+MIN_INGRESSANTES = 10   # pipelines/dashboard.py: published = QT_INGRESSANTE >= 10
+MIN_PARTICIPANTES = 10  # CPC/Enade: QT_PARTICIPANTES >= 10
 ANOS = list(range(2015, 2025))
 CENSO_ANOS = [2021, 2022, 2023, 2024]
 PUBLICA = {1, 2, 3}          # federal, estadual, municipal
@@ -81,9 +83,11 @@ def curso_series(t: pd.DataFrame) -> list[dict]:
         g = g.set_index("NU_ANO_REFERENCIA").reindex(ANOS)
         if g["QT_INGRESSANTE"].isna().any():
             continue  # série incompleta: não entra (não há caso em MT, auditado abaixo)
+        if g["QT_INGRESSANTE"].iloc[0] < MIN_INGRESSANTES:
+            continue  # célula pequena: mesma regra de publicação do banco
         first = g.iloc[0]
         out.append({
-            "id": int(cid), "ies": str(first["NO_IES"]).strip(), "nome": str(first["NO_CURSO"]).strip().title(),
+            "id": int(cid), "co_ies": int(first["CO_IES"]), "ies": str(first["NO_IES"]).strip(), "nome": str(first["NO_CURSO"]).strip().title(),
             "rotulo": first["NO_CINE_ROTULO"], "area": first["NO_CINE_AREA_GERAL"],
             "grau": int(first["TP_GRAU_ACADEMICO"]), "mod": int(first["TP_MODALIDADE_ENSINO"]),
             "rede": first["REDE"], "mun": int(first["CO_MUNICIPIO"]) if pd.notna(first["CO_MUNICIPIO"]) else None,
@@ -96,7 +100,7 @@ def curso_series(t: pd.DataFrame) -> list[dict]:
 
 def uf_aggregates(t: pd.DataFrame) -> dict:
     """Brasil, presencial: somas por UF e rede de N, falecidos, concluintes, desistentes e permanência por ano."""
-    p = t[(t["TP_MODALIDADE_ENSINO"] == 1) & t["REDE"].notna()].copy()
+    p = t[(t["TP_MODALIDADE_ENSINO"] == 1) & t["REDE"].notna() & (t["QT_INGRESSANTE"] >= MIN_INGRESSANTES)].copy()
     out: dict = {}
     keys = ["CO_UF", "REDE", "NU_ANO_REFERENCIA"]
     agg = p.groupby(keys)[["QT_INGRESSANTE", "QT_PERMANENCIA", "QT_CONCLUINTE", "QT_DESISTENCIA", "QT_FALECIDO"]].sum()
@@ -110,7 +114,7 @@ def uf_aggregates(t: pd.DataFrame) -> dict:
 
 # ---------------------------------------------------------------- Censo
 CENSO_COLS = ["NU_ANO_CENSO", "CO_UF", "CO_MUNICIPIO", "TP_DIMENSAO", "TP_REDE", "TP_CATEGORIA_ADMINISTRATIVA",
-              "CO_CURSO", "TP_GRAU_ACADEMICO", "TP_MODALIDADE_ENSINO", "TP_NIVEL_ACADEMICO", "NO_CINE_AREA_GERAL",
+              "CO_IES", "CO_CURSO", "TP_GRAU_ACADEMICO", "TP_MODALIDADE_ENSINO", "TP_NIVEL_ACADEMICO", "NO_CINE_AREA_GERAL",
               "QT_VG_TOTAL", "QT_ING", "QT_MAT", "QT_CONC", "QT_SIT_TRANCADA", "QT_SIT_DESVINCULADO", "QT_SIT_TRANSFERIDO", "QT_SIT_FALECIDO",
               "QT_MAT_FIES", "QT_MAT_PROUNII", "QT_MAT_PROUNIP"]
 
@@ -129,7 +133,7 @@ def load_censo(ano: int) -> pd.DataFrame:
     df["REDE"] = np.where(df["TP_REDE"] == 1, "publica", np.where(df["TP_REDE"] == 2, "privada", None))
     # Dimensão fixa por modalidade (mesma regra de pipelines/annual.py): presencial = 1, EAD = 2.
     keep = ((df["TP_MODALIDADE_ENSINO"] == 1) & (df["TP_DIMENSAO"] == 1)) | ((df["TP_MODALIDADE_ENSINO"] == 2) & (df["TP_DIMENSAO"] == 2))
-    return df[keep & (df["TP_NIVEL_ACADEMICO"] == 1)]
+    return df[keep]  # mesma regra do banco: sem filtro de nível acadêmico
 
 
 # ---------------------------------------------------------------- CPC / Enade
@@ -152,24 +156,25 @@ def num(s: pd.Series) -> pd.Series:
 CPC_SRC = {"enade": "CONCEITO_ENADE_CONTINUO", "idd": "NOTA_PADRONIZADA_IDD", "mestres": "NOTA_PADRONIZADA_MESTRES",
            "doutores": "NOTA_PADRONIZADA_DOUTORES", "regime": "NOTA_PADRONIZADA_REGIME_DE_TRABALHO",
            "odp": "NOTA_PADRONIZADA_ORGANIZACAO_DIDATICO_PEDAGOGICA",
-           "infra": "NOTA_PADRONIZADA_INFRAESTRUTURA_E_INSTALACOES_FISICAS",
-           "oaf": "NOTA_PADRONIZADA_OPORTUNIDADE_DE_AMPLIACAO_DA_FORMACAO"}
+           "infra": "NOTA_PADRONIZADA_INFRAESTRUTURA_E_INSTALACOES_FISICAS"}
 
 
 def load_cpc() -> pd.DataFrame:
     frames = []
     for ano, nome in [(2021, "CPC_2021.xlsx"), (2022, "cpc_2022.xlsx"), (2023, "CPC_2023.xlsx")]:
         df = norm_cols(pd.read_excel(DADOS / nome, engine="openpyxl", dtype=str))
-        df = df[df["SIGLA_DA_UF"].astype(str).str.strip() == "MT"]
-        d = pd.DataFrame({"CO_CURSO": as_int(num(df["CODIGO_DO_CURSO"])), "CPC_CONTINUO": num(df["CPC_CONTINUO"]),
-                          "CPC_FAIXA": num(df["CPC_FAIXA"]), "EDICAO": ano})
+        part = next(c for c in df.columns if c.endswith("DE_CONCLUINTES_PARTICIPANTES"))
+        d = pd.DataFrame({"CO_IES": as_int(num(df["CODIGO_DA_IES"])), "CO_CURSO": as_int(num(df["CODIGO_DO_CURSO"])),
+                          "CPC_CONTINUO": num(df["CPC_CONTINUO"]), "CPC_FAIXA": num(df["CPC_FAIXA"]),
+                          "PART": num(df[part]), "EDICAO": ano})
         for k, col in CPC_SRC.items():
             d[k] = num(df[col])
         frames.append(d)
     cpc = pd.concat(frames)
-    cpc = cpc[cpc["CPC_CONTINUO"].notna() & cpc["CPC_FAIXA"].notna() & cpc["CO_CURSO"].notna()]
-    # Uma edição por curso: a mais recente disponível (política de outputs/dashboard/audit.json).
-    return cpc.sort_values("EDICAO").drop_duplicates("CO_CURSO", keep="last")
+    cpc = cpc[cpc["CO_CURSO"].notna() & cpc["CO_IES"].notna()]
+    # Regra do banco: última edição por curso + IES, e só então a validade (CPC entre 0 e 5, >= 10 participantes).
+    cpc = cpc.sort_values("EDICAO").drop_duplicates(["CO_IES", "CO_CURSO"], keep="last")
+    return cpc[cpc["CPC_CONTINUO"].between(0, 5) & cpc["PART"].ge(MIN_PARTICIPANTES)]
 
 
 def load_enade() -> pd.DataFrame:
@@ -177,6 +182,7 @@ def load_enade() -> pd.DataFrame:
     d = pd.DataFrame({
         "UF": df["SIGLA_DA_UF"].astype(str).str.strip(),
         "CO_CURSO": as_int(num(df["CODIGO_DO_CURSO"])),
+        "CO_IES": as_int(num(df["CODIGO_DA_IES"])),
         "AREA": df["AREA_DE_AVALIACAO"].astype(str).str.replace("\u200b", "", regex=False).str.strip(),
         "MOD": df["MODALIDADE_DE_ENSINO"].astype(str).str.strip(),
         "PART": num(df[next(c for c in df.columns if c.endswith("DE_CONCLUINTES_PARTICIPANTES"))]),
@@ -186,7 +192,7 @@ def load_enade() -> pd.DataFrame:
         "MUN": as_int(num(df["CODIGO_DO_MUNICIPIO"])),
     })
     d["REDE"] = np.where(d["CAT"].str.startswith("Púb"), "publica", np.where(d["CAT"].str.startswith("Priv"), "privada", None))
-    return d[(d["UF"] == "MT") & d["PART"].gt(0) & d["PROF"].notna()]
+    return d[d["PART"].gt(0) & d["PROF"].between(0, d["PART"])]
 
 
 # ---------------------------------------------------------------- execução
@@ -208,9 +214,12 @@ def main() -> None:
     censo_rows = [[int(r.NU_ANO_CENSO), r.REDE, int(r.TP_MODALIDADE_ENSINO), int(r.TP_GRAU_ACADEMICO) if pd.notna(r.TP_GRAU_ACADEMICO) else 0,
                    r.NO_CINE_AREA_GERAL, *[int(getattr(r, s)) for s in sums]] for r in cg.itertuples()]
 
-    # Financiamento por curso (rede privada, 2021–2024 somados): liga ao curso da trajetória pelo CO_CURSO.
-    priv = censo[censo["REDE"] == "privada"].groupby("CO_CURSO")[["QT_MAT", "QT_MAT_FIES", "QT_MAT_PROUNII", "QT_MAT_PROUNIP"]].sum()
-    fin = {int(k): [int(v.QT_MAT), int(v.QT_MAT_FIES), int(v.QT_MAT_PROUNII), int(v.QT_MAT_PROUNIP)] for k, v in priv.iterrows() if v.QT_MAT > 0}
+    # Financiamento por curso, regra do banco: rede privada, Censo 2024, curso + IES + modalidade, >= 10 matrículas.
+    priv = censo[(censo["REDE"] == "privada") & (censo["NU_ANO_CENSO"] == 2024)].groupby(["CO_IES", "CO_CURSO", "TP_MODALIDADE_ENSINO"])[["QT_MAT", "QT_MAT_FIES", "QT_MAT_PROUNII", "QT_MAT_PROUNIP"]].sum()
+    tr = {(c["co_ies"], c["id"], c["mod"]) for c in cursos if c["rede"] == "privada"}
+    fin = {int(k[1]): [int(v.QT_MAT), int(v.QT_MAT_FIES), int(v.QT_MAT_PROUNII), int(v.QT_MAT_PROUNIP)]
+           for k, v in priv.iterrows() if (int(k[0]), int(k[1]), int(k[2])) in tr and v.QT_MAT >= 10}
+    audit["financiamento_cursos_ligados"] = len(fin)
 
     # B1: vagas presenciais 2022 por município e rede + população 18–24 (IBGE, Censo 2022, tabela 9514).
     c22 = censo[(censo["NU_ANO_CENSO"] == 2022) & (censo["TP_MODALIDADE_ENSINO"] == 1)]
@@ -232,19 +241,21 @@ def main() -> None:
 
     cpc = load_cpc()
     ids = {c["id"] for c in cursos}
-    cpc_mt = cpc[cpc["CO_CURSO"].isin(ids)]
-    cpc_out = {int(r.CO_CURSO): {"ed": int(r.EDICAO), "cpc": round(float(r.CPC_CONTINUO), 3), "faixa": int(r.CPC_FAIXA),
-               **{k: (round(float(getattr(r, k)), 3) if pd.notna(getattr(r, k)) else None) for k in CPC_SRC}}
+    ies_of = {c["id"]: c["co_ies"] for c in cursos}
+    cpc_mt = cpc[[ies_of.get(int(c)) == int(i) for c, i in zip(cpc["CO_CURSO"], cpc["CO_IES"])]]
+    cpc_out = {int(r.CO_CURSO): {"ed": int(r.EDICAO), "cpc": float(r.CPC_CONTINUO), "faixa": int(r.CPC_FAIXA), "part": int(r.PART),
+               **{k: (float(getattr(r, k)) if pd.notna(getattr(r, k)) else None) for k in CPC_SRC}}  # valor exato: arredondar cria empates no Spearman
                for r in cpc_mt.itertuples()}
     audit["cpc_cursos_mt_ligados"] = len(cpc_out)
 
     enade = load_enade()
-    en = enade[enade["CO_CURSO"].isin(ids)]
+    lic = {c["id"]: c["co_ies"] for c in cursos if c["grau"] == 2}
+    en = enade[np.array([lic.get(int(c)) == int(i) for c, i in zip(enade["CO_CURSO"], enade["CO_IES"])]) & enade["PART"].ge(MIN_PARTICIPANTES).to_numpy()]
     enade_out = [[int(r.CO_CURSO), r.AREA.title(), int(r.PART), int(r.PROF), "ead" if "dist" in r.MOD.lower() else "presencial",
-                  r.REDE, int(r.MUN) if pd.notna(r.MUN) else None, bool(r.CO_CURSO in ids)] for r in enade.itertuples()]
-    audit["enade_licenciaturas_mt_validas"] = int(len(enade))
+                  r.REDE, int(r.MUN) if pd.notna(r.MUN) else None, True] for r in en.itertuples()]
+    audit["enade_licenciaturas_publicadas"] = int(len(en))
     audit["enade_ligados_a_trajetoria"] = int(en["CO_CURSO"].nunique())
-    audit["enade_area_mt"] = {a.title(): [int(g.PART.sum()), int(g.PROF.sum())] for a, g in enade.groupby("AREA")}
+    audit["enade_area_publicada"] = {a.title(): [int(g.PART.sum()), int(g.PROF.sum())] for a, g in en.groupby("AREA")}
 
     data = {
         "meta": {

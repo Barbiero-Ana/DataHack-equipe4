@@ -31,6 +31,11 @@ def check(base_url):
         stored = connection.execute(
             "SELECT payload,audit FROM analytics.dashboard_mt WHERE release_id=%s", (release,)
         ).fetchone()
+        if stored and "municipal_population" in stored["payload"]:
+            from pipelines.municipal_population import enrich, read_source
+
+            _, population, provenance = read_source()
+            enrich(expected, audit, population, provenance)
         if stored is None or stored["payload"] != expected or stored["audit"] != audit:
             raise ValueError("Produtos do banco divergem da reconstrução pandas.")
     cases = [
@@ -54,18 +59,21 @@ def check(base_url):
                 "enade",
                 "funding_relationship",
                 "municipal",
+                "municipal_population",
             ):
                 applicable = {
                     key: value
                     for key, value in filters.items()
-                    if product != "municipal" or key in ("network", "municipality")
+                    if (product == "municipal_population" and key == "municipality")
+                    or (product == "municipal" and key in ("network", "municipality"))
+                    or product not in ("municipal", "municipal_population")
                 }
                 rows = [
                     row
-                    for row in expected[product]
+                    for row in expected.get(product, [])
                     if all(row.get(k) == v for k, v in applicable.items())
                 ]
-                assert body["data"][product] == rows, (product, filters)
+                assert body["data"].get(product, []) == rows, (product, filters)
             finance = {}
             for row in expected["finance"]:
                 if not all(row.get(k) == v for k, v in filters.items()):

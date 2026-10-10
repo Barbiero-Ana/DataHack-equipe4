@@ -52,9 +52,9 @@ export function whiskers(host, rows) {
   rows.forEach((r, i) => {
     S('line', {x1: x(i), x2: x(i), y1: y(r.lo), y2: y(r.hi), stroke: C.gray, 'stroke-width': 2}, svg);
     [r.lo, r.hi].forEach(v => S('line', {x1: x(i) - 6, x2: x(i) + 6, y1: y(v), y2: y(v), stroke: C.gray, 'stroke-width': 2}, svg));
-    tipAttr(S('circle', {cx: x(i), cy: y(r.desist), r: 7, fill: C.loss}, svg), `<b>${r.q}</b><br>Desistência: ${pct(r.desist)}<br>IC 95% aprox.: ${fmt(r.lo, 1)}–${fmt(r.hi, 1)}%<br>Financiados (mediana): ${pct(r.fin)}<br>Cursos: ${r.n}`);
-    label(svg, x(i), H - 30, r.q.split(' · ')[0], {anchor: 'middle', strong: true});
-    label(svg, x(i), H - 14, 'mediana ' + fmt(r.fin, 0) + '% financiados', {anchor: 'middle', size: 10});
+    tipAttr(S('circle', {cx: x(i), cy: y(r.desist), r: 7, fill: C.loss}, svg), `<b>${r.q}</b><br>Desistência: ${pct(r.desist)}<br>IC 95% aprox.: ${fmt(r.lo, 1)}–${fmt(r.hi, 1)}%<br>FIES (mediana da faixa): ${pct(r.fin)}<br>Cursos: ${r.n}`);
+    label(svg, x(i), H - 30, r.q, {anchor: 'middle', strong: true});
+    label(svg, x(i), H - 14, r.n + ' cursos', {anchor: 'middle', size: 10});
   });
 }
 

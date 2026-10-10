@@ -108,8 +108,9 @@ export function anoAtipico(series) {
 }
 
 /* ---------------- P4 · CPC ---------------- */
-export const COMPONENTES = [['enade', 'Conceito Enade'], ['idd', 'IDD (valor agregado)'], ['doutores', 'Docentes doutores'], ['mestres', 'Docentes mestres'],
-  ['regime', 'Regime de trabalho docente'], ['odp', 'Organização didático-pedagógica'], ['infra', 'Infraestrutura'], ['oaf', 'Oportunidades de ampliação da formação']];
+// Mesma lista de componentes publicada pelo banco (pipelines/dashboard.py, COMPONENTS).
+export const COMPONENTES = [['cpc', 'CPC contínuo'], ['enade', 'Conceito Enade'], ['idd', 'IDD (valor agregado)'], ['mestres', 'Docentes mestres'], ['doutores', 'Docentes doutores'],
+  ['infra', 'Infraestrutura'], ['odp', 'Organização didático-pedagógica'], ['regime', 'Regime de trabalho docente']];
 export function cpcPontos(cs) {
   return cs.map(c => ({c, q: DATA.cpc[c.id], B: Bfinal(c)})).filter(x => x.q && x.B >= MIN_COORTE)
     .map(({c, q, B}) => ({...q, id: c.id, nome: c.nome, ies: c.ies, rede: c.rede, area: c.area, B, S: c.s.reduce((a, b) => a + b, 0), tda: tda(c)}));
@@ -139,21 +140,23 @@ export function municipios(f) {
 }
 
 /* ---------------- B2 · financiamento (rede privada) ---------------- */
+// Regra do banco: Censo 2024, curso + IES, pelo menos 10 matrículas; FIES e ProUni separados.
 export function financiamento(cs) {
-  return cs.filter(c => c.rede === 'privada' && DATA.fin[c.id] && Bfinal(c) >= MIN_COORTE).map(c => {
+  return cs.filter(c => c.rede === 'privada' && DATA.fin[c.id]).map(c => {
     const [mat, fies, pi, pp] = DATA.fin[c.id];
-    return {id: c.id, nome: c.nome, ies: c.ies, B: Bfinal(c), S: c.s.reduce((a, b) => a + b, 0), tda: tda(c), mat, fies: 100 * fies / mat, prouni: 100 * (pi + pp) / mat, fin: 100 * (fies + pi + pp) / mat};
+    return {id: c.id, nome: c.nome, ies: c.ies, B: Bfinal(c), S: c.s.reduce((a, b) => a + b, 0), tda: tda(c), mat, fies: 100 * fies / mat, prouni: 100 * (pi + pp) / mat, fin: 100 * fies / mat};
   });
 }
+// Faixas de participação FIES usadas nas páginas da API (QuestionsReal.tsx).
+export const FAIXAS_FIES = [{q: 'Sem FIES', lo: 0, hi: 0}, {q: 'FIES >0–5%', lo: 0, hi: 5}, {q: 'FIES >5–10%', lo: 5, hi: 10}, {q: 'FIES >10%', lo: 10, hi: 100}];
 export function quartis(pts) {
-  if (pts.length < 8) return [];
-  const o = pts.slice().sort((a, b) => a.fin - b.fin), q = 4;
-  return Array.from({length: q}, (_, i) => {
-    const l = o.slice(Math.round(i * o.length / q), Math.round((i + 1) * o.length / q)), p = taxa(l) / 100, B = l.reduce((s, x) => s + x.B, 0);
-    const e = 196 * Math.sqrt(p * (1 - p) / B);   // IC 95% aproximado (binomial, sem efeito de agrupamento)
-    const fin = l.map(x => x.fin).sort((a, b) => a - b);
-    return {q: `Q${i + 1}${i === 0 ? ' · menos financiados' : i === 3 ? ' · mais financiados' : ''}`, fin: fin[Math.floor(fin.length / 2)], desist: 100 * p, lo: 100 * p - e, hi: 100 * p + e, n: l.length};
-  });
+  return FAIXAS_FIES.map(b => {
+    const l = pts.filter(p => b.hi === 0 ? p.fies === 0 : p.fies > b.lo && p.fies <= b.hi);
+    if (!l.length) return null;
+    const p = taxa(l) / 100, B = l.reduce((s, x) => s + x.B, 0), e = 196 * Math.sqrt(p * (1 - p) / B);   // IC 95% aproximado
+    const f = l.map(x => x.fies).sort((a, b) => a - b);
+    return {q: b.q, fin: f[Math.floor(f.length / 2)], desist: 100 * p, lo: 100 * p - e, hi: 100 * p + e, n: l.length};
+  }).filter(Boolean);
 }
 
 /* ---------------- Brasil ---------------- */

@@ -332,18 +332,22 @@ def publish():
             for family in ("trajetoria", "cpc", "enade", "censo_cursos")
         }
         payload, audit = build(frames)
+        from pipelines.municipal_population import attach_published
+
+        has_population = attach_published(connection, release, payload, audit)
+        contract = "dashboard-1.1.0" if has_population else CONTRACT
         connection.execute(
             "INSERT INTO analytics.dashboard_mt(release_id,contract_version,payload,audit) "
             "VALUES (%s,%s,%s,%s) ON CONFLICT(release_id) DO UPDATE SET "
             "contract_version=EXCLUDED.contract_version,payload=EXCLUDED.payload,audit=EXCLUDED.audit,created_at=now()",
-            (release, CONTRACT, Jsonb(payload), Jsonb(audit)),
+            (release, contract, Jsonb(payload), Jsonb(audit)),
         )
     output = Path("outputs/dashboard")
     output.mkdir(parents=True, exist_ok=True)
     (output / "audit.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2))
     summary = {
         "release_id": str(release),
-        "contract": CONTRACT,
+        "contract": contract,
         "records": {key: len(value) for key, value in payload.items()},
         "audit": audit,
     }

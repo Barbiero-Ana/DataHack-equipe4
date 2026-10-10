@@ -80,3 +80,22 @@ def test_missing_product_has_safe_503():
     with pytest.raises(HTTPException) as exc:
         AnalyticsService(repo).dashboard(DashboardFilter())
     assert exc.value.status_code == 503
+
+
+def test_population_is_not_filtered_by_education_network_or_degree():
+    repo = repository()
+    repo.dashboard.return_value["payload"]["municipal_population"] = [
+        {"municipality": "5103403", "name": "Cuiabá", "population": 100},
+        {"municipality": "5108402", "name": "Várzea Grande", "population": 50},
+    ]
+    service = AnalyticsService(repo)
+    assert (
+        len(
+            service.dashboard(DashboardFilter(network="1", degree="2")).data["municipal_population"]
+        )
+        == 2
+    )
+    assert (
+        len(service.dashboard(DashboardFilter(municipality="5103403")).data["municipal_population"])
+        == 1
+    )

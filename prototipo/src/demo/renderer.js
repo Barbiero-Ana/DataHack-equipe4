@@ -64,6 +64,18 @@ function b2data() {
   return {serie, pts, q, rho:spearman(pts.map(p => p.fin), pts.map(p => p.tda))};
 }
 
+/* Leitura das faixas de FIES: padrão menor/maior só se a desistência cair/subir em todas as faixas. */
+function leituraFies(q) {
+  if (q.length < 2) return {padrao:'sem', txt:''};
+  const ds = q.map(x => x.desist), mn = q[ds.indexOf(Math.min(...ds))], mx = q[ds.indexOf(Math.max(...ds))];
+  const cai = ds.every((v, i) => !i || v <= ds[i - 1]), sobe = ds.every((v, i) => !i || v >= ds[i - 1]);
+  const padrao = cai ? 'menor' : sobe ? 'maior' : 'irregular';
+  const txt = padrao === 'irregular'
+    ? `a relação com o FIES é irregular: a menor desistência está em ${mn.q} (${pc(mn.desist, 0)}) e a maior em ${mx.q} (${pc(mx.desist, 0)})`
+    : `quanto mais FIES, ${padrao} a desistência: de ${pc(q[0].desist, 0)} (${q[0].q}) a ${pc(q[q.length - 1].desist, 0)} (${q[q.length - 1].q})`;
+  return {padrao, txt, mn, mx};
+}
+
 /* ---------- gráficos reutilizáveis (páginas e respostas) ---------- */
 const drawStacked = (h, a) => stackedArea(h, a.anos.map(x => ({ano:x.ano, concluiu:x.tca, cursando:x.tap, desistiu:x.tda})), [{nome:'Concluiu', cor:C.blue, key:'concluiu'}, {nome:'Cursando', cor:C.gray, key:'cursando'}, {nome:'Desistiu', cor:C.loss, key:'desistiu'}]);
 const drawLoss = (h, a) => lollipop(h, a.anos.map(x => ({ano:x.ano, perda:x.tada})), 'perda', a.anos.indexOf(a.pico));
@@ -120,8 +132,8 @@ function drawB2Cols(h, B) {
 }
 function drawB2Scatter(h, pts, w) {
   const x1 = Math.max(10, Math.ceil(Math.max(...pts.map(p => p.fin)) / 10) * 10);
-  scatter(h, pts.map(c => ({x:c.fin, y:c.tda, r:3 + Math.sqrt(c.B) / 3, cor:C.loss, tip:`<b>${c.nome}</b><br>IES: ${c.ies}<br>Matrículas financiadas (2021–2024): ${pc(c.fin)}<br>FIES: ${pc(c.fies)} · ProUni: ${pc(c.prouni)}<br>Desistência (coorte 2015): ${pc(c.tda)}`})),
-    {x0:0, x1, y0:0, y1:100, h:340, w, xTicks:Array.from({length:x1 / 10 + 1}, (_, i) => i * 10), yTicks:[0, 25, 50, 75, 100], xUnit:P, yUnit:P, xTitle:'Matrículas com FIES ou ProUni, 2021–2024', yTitle:'Desistência (coorte 2015)', trend:true, alpha:.5});
+  scatter(h, pts.map(c => ({x:c.fin, y:c.tda, r:3 + Math.sqrt(c.B) / 3, cor:C.loss, tip:`<b>${c.nome}</b><br>IES: ${c.ies}<br>FIES em 2024: ${pc(c.fies)}<br>ProUni em 2024: ${pc(c.prouni)}<br>Matrículas 2024: ${nk(c.mat)}<br>Desistência (coorte 2015): ${pc(c.tda)}`})),
+    {x0:0, x1, y0:0, y1:100, h:340, w, xTicks:Array.from({length:x1 / 10 + 1}, (_, i) => i * 10), yTicks:[0, 25, 50, 75, 100], xUnit:P, yUnit:P, xTitle:'Matrículas com FIES em 2024 (%)', yTitle:'Desistência (coorte 2015)', trend:true, alpha:.5});
 }
 
 /* ---------- páginas ---------- */
@@ -216,11 +228,11 @@ addPage({id:'p4', title:'Qualidade do ensino', sub:'CPC de cada curso, desistên
   el.innerHTML = pageHead(this) + `<div class="kpis">${kpi(nk(pts.length), `cursos com CPC (de ${nk(cs.length)} no recorte)`)}${kpi(rho == null ? '—' : fmt(rho, 2), `correlação CPC × desistência (${forca(rho) || 'sem dados'})`)}${kpi(pc(taxa(pts)), 'desistência desses cursos')}</div>
    <div class="grid c21">${card('CPC × desistência', 'Cada bolha é um curso; tamanho = ingressantes de 2015; linha tracejada = tendência linear', `<div class="ctl"><label>CPC mínimo<select id="p4min">${[0, 2, 3, 4].map(v => `<option value="${v}" ${loc.p4 === v ? 'selected' : ''}>${v === 0 ? 'Todos' : '≥ ' + v}</option>`).join('')}</select></label></div>${slot('p4a')}${legend([[C.navy, 'Pública'], [C.loss, 'Privada']])}`)}
     ${card('CPC por curso', 'Dez maiores CPCs do recorte', `<table class="table"><tr><th>Curso</th><th class="n">CPC</th><th class="n">Desistência</th></tr>${tb.map(x => `<tr><td>${x.nome}<br><span class="hint">${x.ies.length > 40 ? x.ies.slice(0, 39) + '…' : x.ies}</span></td><td class="n"><b>${fmt(x.cpc, 2)}</b></td><td class="n">${pc(x.tda, 0)}</td></tr>`).join('') || '<tr><td colspan="3">Sem cursos no recorte.</td></tr>'}</table>`)}</div>
-   <div class="grid c2">${card('Desistência por faixa de CPC e rede', 'Taxa agregada dos cursos de cada faixa; faixas com menos de 5 cursos ficam sem ponto', slot('p4h1'))}${card('O que mais separa os cursos', 'Desistência do tercil de cursos com nota mais alta e mais baixa em cada componente do CPC', slot('p4h2'))}</div>
-   ${note('CPC: edição mais recente de cada curso entre 2021 e 2023, ligada por código do curso à trajetória da coorte 2015 (pelo menos 10 ingressantes). O CPC mede o curso anos depois do ingresso; correlação não prova causa.')}`;
+   <div class="grid c2">${card('Desistência por faixa de CPC e rede', 'Faixa oficial do arquivo; taxa ponderada pelo denominador da coorte', slot('p4h1'))}${card('O que mais separa os cursos', 'Desistência do tercil de cursos com nota mais alta e mais baixa em cada componente do CPC', slot('p4h2'))}</div>
+   ${note('CPC (regra do banco): edição mais recente de cada curso entre 2021 e 2023, ligada por curso + IES à trajetória da coorte 2015, com CPC válido e pelo menos 10 participantes. O CPC mede o curso anos depois do ingresso; correlação não prova causa.')}`;
   $('p4min').onchange = e => { loc.p4 = +e.target.value; renderAll(); };
   pts.length ? drawScatterCPC($('p4a'), pts) : empty($('p4a'));
-  const faixas = [1, 2, 3, 4, 5], fx = l => faixas.map(f => { const q = l.filter(p => p.faixa === f); return q.length >= 5 ? taxa(q) : null; });
+  const faixas = [1, 2, 3, 4, 5], fx = l => faixas.map(f => { const q = l.filter(p => p.faixa === f); return q.length ? taxa(q) : null; });
   const ser = [['publica', 'Pública', C.navy], ['privada', 'Privada', C.loss]].filter(([r]) => state.rede === 'todas' || state.rede === r).map(([r, n, cor]) => ({nome:n, cor, values:fx(todos.filter(p => p.rede === r))}));
   if (state.rede === 'todas') ser.push({nome:'Todas', cor:C.ink, dash:'5 4', values:fx(todos)});
   todos.length ? lineChart($('p4h1'), faixas.map(f => 'Faixa ' + f), ser, {unit:P, ymax:100, labelEnd:true, h:300}) : empty($('p4h1'));
@@ -236,7 +248,7 @@ addPage({id:'p5', title:'Licenciaturas e Enade', sub:'Ingressantes, concluintes 
    <div class="grid c2">${card('Ingressantes e concluintes por licenciatura', 'Coorte 2015: ingressantes e concluintes acumulados até 2024', slot('p5a'))}${card('Pizza de pizza', 'Situação dos ingressantes de 2015 e, ao lado, proficiência dos participantes do Enade 2025', slot('p5p'))}</div>
    <div class="grid c2">${card('Do ingresso ao diploma', 'De cada 100 ingressantes em licenciaturas, quantos seguem a cada etapa', slot('p5f'))}${card('Desistência × proficiência por licenciatura', 'Linhas tracejadas: média de MT; bolha = participantes do Enade', slot('p5s'))}</div>
    <div class="grid">${card('Desistência e proficiência por licenciatura', 'Mesmos cursos ligados por código; da maior para a menor desistência', slot('p5h'))}</div>
-   ${note('Enade 2025 (concluintes avaliados) e trajetória 2015 (ingressantes) são populações diferentes: as taxas não são multiplicadas. Proficiência = concluintes no padrão 1 de proficiência ou acima ÷ participantes.')}`;
+   ${note('Enade 2025 (regra do banco): licenciaturas ligadas por curso + IES à trajetória, com pelo menos 10 participantes. Enade (concluintes avaliados) e trajetória (ingressantes de 2015) são populações diferentes: as taxas não são multiplicadas. Proficiência = proficientes ÷ participantes.')}`;
   hbarsGrouped($('p5a'), rot.map(r => ({nome:r.nome.replace(' formação de professor', ''), vals:[r.N, r.C]})), [{nome:'Ingressantes', cor:C.navy}, {nome:'Concluintes', cor:C.loss}], {f:nk, ml:190});
   L.part ? drawPie($('p5p'), L) : empty($('p5p'), 'Sem participantes do Enade no recorte.');
   funnel($('p5f'), [{nome:'Ingressaram', v:100, cor:C.navy, nota:`${nk(L.a.N)} estudantes em 2015`}, {nome:'Seguiam após o 1º ano', v:100 - L.a.anos[0].tda, cor:C.blue, nota:`${pc(L.a.anos[0].tda)} saíram no 1º ano`},
@@ -264,10 +276,10 @@ addPage({id:'b1', title:'Distribuição geográfica da oferta', sub:'Vagas prese
 /* B2 */
 addPage({id:'b2', title:'Financiamento estudantil e permanência', sub:'FIES e ProUni na rede privada de MT, 2021–2024, e relação com a desistência dos cursos.', src:'INEP · Censo + Trajetória', render(el) {
   const B = b2data(), s = B.serie, i = 3, sh = (v, j) => s.mat[j] ? 100 * v[j] / s.mat[j] : null, q = B.q;
-  el.innerHTML = pageHead(this) + `<div class="kpis">${kpi(nk(s.fies[i]), `matrículas com FIES em 2024 (${pc(sh(s.fies, i))})`)}${kpi(nk(s.pi[i] + s.pp[i]), `matrículas com ProUni em 2024 (${pc(sh(s.pi, i) + sh(s.pp, i))})`)}${kpi(pc(sh(s.fies, 0)) + ' → ' + pc(sh(s.fies, i)), 'participação do FIES, 2021 → 2024')}${q.length ? kpi((q[3].desist - q[0].desist > 0 ? '+' : '') + fmt(q[3].desist - q[0].desist, 1) + ' p.p.', 'desistência do quartil mais financiado vs. o menos') : ''}</div>
+  el.innerHTML = pageHead(this) + `<div class="kpis">${kpi(nk(s.fies[i]), `matrículas com FIES em 2024 (${pc(sh(s.fies, i))})`)}${kpi(nk(s.pi[i] + s.pp[i]), `matrículas com ProUni em 2024 (${pc(sh(s.pi, i) + sh(s.pp, i))})`)}${kpi(pc(sh(s.fies, 0)) + ' → ' + pc(sh(s.fies, i)), 'participação do FIES, 2021 → 2024')}${q.length ? kpi((q[q.length - 1].desist - q[0].desist > 0 ? '+' : '') + fmt(q[q.length - 1].desist - q[0].desist, 1) + ' p.p.', `desistência: ${q[q.length - 1].q} vs. ${q[0].q}`) : ''}</div>
    <div class="grid c2">${card('Matrículas financiadas por ano', 'Rede privada, presencial + EAD', slot('b2c'))}${card('Participação nas matrículas privadas', 'Em %, cada programa separado (pode haver sobreposição)', slot('b2a'))}</div>
-   <div class="grid c2">${card('Desistência por quartil de financiamento', 'Cursos privados presenciais da coorte 2015; ponto = taxa agregada, traço = IC 95% aproximado', q.length ? slot('b2q') : '<div class="empty">Poucos cursos no recorte.</div>')}${card('Cada curso privado', 'Financiamento × desistência; tamanho = ingressantes', B.pts.length > 2 ? slot('b2s') + `<div class="note">Spearman ${B.rho == null ? '—' : fmt(B.rho, 2)} (${forca(B.rho)}) entre ${B.pts.length} cursos.</div>` : '<div class="empty">Poucos cursos no recorte.</div>')}</div>
-   ${note('Financiamento por curso = (FIES + ProUni integral + ProUni parcial) ÷ matrículas, somando 2021–2024. Esses matriculados não são os ingressantes de 2015: a relação é entre cursos, sem causalidade. No EAD privado de MT não há matrículas com FIES registradas.')}`;
+   <div class="grid c2">${card('Desistência por participação do FIES', 'Faixas de FIES em 2024 (as mesmas das páginas da API); ponto = taxa agregada da coorte 2015, traço = IC 95% aproximado', q.length ? slot('b2q') : '<div class="empty">Poucos cursos no recorte.</div>')}${card('Cada curso privado', 'FIES em 2024 × desistência da coorte 2015; tamanho = ingressantes', B.pts.length > 2 ? slot('b2s') + `<div class="note">Spearman ${B.rho == null ? '—' : fmt(B.rho, 2)} (${forca(B.rho)}) entre ${B.pts.length} cursos.</div>` : '<div class="empty">Poucos cursos no recorte.</div>')}</div>
+   ${note('Relação por curso (regra do banco): FIES ÷ matrículas no Censo 2024, cursos privados ligados à trajetória por curso + IES, com pelo menos 10 matrículas. FIES e ProUni ficam separados. Esses matriculados não são os ingressantes de 2015: a relação é entre cursos, sem causalidade. No EAD privado de MT o FIES é residual (de 1 a 6 matrículas por ano).')}`;
   drawB2Cols($('b2c'), B);
   lineChart($('b2a'), CENSO_ANOS, [{nome:'FIES', cor:C.navy, values:s.fies.map((_, j) => sh(s.fies, j))}, {nome:'ProUni integral', cor:C.loss, values:s.pi.map((_, j) => sh(s.pi, j))}, {nome:'ProUni parcial', cor:C.sand, values:s.pp.map((_, j) => sh(s.pp, j))}], {unit:P, ymax:8, labelEnd:true, h:300});
   if (q.length) whiskers($('b2q'), q);
@@ -298,9 +310,9 @@ addPage({id:'ans', title:'Respostas às perguntas', sub:'', src:'INEP · IBGE', 
    {t:'B1', q:'Desertos de ensino superior', h:`${des.length} dos ${b1.length} municípios de MT não têm vaga presencial de graduação (2022); neles vivem ${fmt(jd / 1000, 1)} mil jovens de 18 a 24 anos (${pc(100 * jd / popT, 0)}). No estado, são ${fmt(100 * vg / popT, 1)} vagas presenciais por 100 jovens.`,
     s:[[String(des.length), 'municípios sem oferta'], [fmt(jd / 1000, 1) + ' mil', 'jovens nesses municípios'], [fmt(100 * vg / popT, 1), 'vagas por 100 jovens']],
     c1:['Vagas por 100 jovens', h => { h.style.maxWidth = '560px'; h.style.margin = 'auto'; drawMT(h, b1, 'v100'); }], c2:['Menor oferta proporcional', h => { const l = b1.filter(m => m.vagas > 0).sort((x, y) => x.v100 - y.v100).slice(0, 10); hbarsGrouped(h, l.map(m => ({nome:m.nome, vals:[m.v100]})), [{nome:'Vagas por 100 jovens', cor:C.loss}], {f:v => fmt(v, 1), ml:170}); }]},
-   {t:'B2', q:'Financiamento e permanência', h:`O peso do financiamento caiu: o FIES passou de ${pc(shf(0))} para ${pc(shf(3))} das matrículas privadas entre 2021 e 2024, e o ProUni de ${pc(shp(0))} para ${pc(shp(3))}. ${q.length ? `Entre ${B.pts.length} cursos privados presenciais, os mais financiados não evadem menos: ${pc(q[3].desist, 0)} no quartil mais financiado contra ${pc(q[0].desist, 0)} no menos financiado.` : ''}`,
-    s:[[pc(shf(3)), 'FIES nas matrículas privadas (2024)'], [pc(shp(3)), 'ProUni (2024)'], [q.length ? (q[3].desist - q[0].desist > 0 ? '+' : '') + fmt(q[3].desist - q[0].desist, 0) + ' p.p.' : '—', 'Q4 vs. Q1 de financiamento']],
-    c1:['Quartis de financiamento', h => q.length ? whiskers(h, q) : empty(h)], c2:['Matrículas financiadas', h => drawB2Cols(h, B)]},
+   {t:'B2', q:'Financiamento e permanência', h:`O peso do financiamento caiu: o FIES passou de ${pc(shf(0))} para ${pc(shf(3))} das matrículas privadas entre 2021 e 2024, e o ProUni de ${pc(shp(0))} para ${pc(shp(3))}. ${q.length > 1 ? `Entre ${B.pts.length} cursos privados presenciais ligados, ${leituraFies(q).txt}.` : ''}`,
+    s:[[pc(shf(3)), 'FIES nas matrículas privadas (2024)'], [pc(shp(3)), 'ProUni (2024)'], [q.length > 1 ? (q[q.length - 1].desist - q[0].desist > 0 ? '+' : '') + fmt(q[q.length - 1].desist - q[0].desist, 0) + ' p.p.' : '—', `${q.length > 1 ? q[q.length - 1].q + ' vs. ' + q[0].q : 'faixas de FIES'}`]],
+    c1:['Desistência por faixa de FIES', h => q.length ? whiskers(h, q) : empty(h)], c2:['Matrículas financiadas', h => drawB2Cols(h, B)]},
   ];
   const sel = A[loc.ans];
   el.innerHTML = pageHead(this) + `<div class="qcards">${A.map((x, i) => `<button type="button" class="qcard ${i === loc.ans ? 'on' : ''}" data-i="${i}"><span class="qwm ${x.t[0] === 'B' ? 'bonus' : ''}">${x.t}</span><span class="qt">${x.q}</span><b>${x.s[0] ? x.s[0][0] : '—'}</b><span class="ql">${x.s[0] ? x.s[0][1] : ''}</span></button>`).join('')}</div>
@@ -318,20 +330,20 @@ addPage({id:'resumo', title:'Resumo final', sub:'Três conclusões que os dados 
   const rows = rotulos(cs).filter(r => r.N >= MIN_RANKING).sort((x, y) => y.d - x.d), top3 = rows.slice(0, 3).map(r => r.nome.replace(' formação de professor', ' (licenciatura)'));
   const pub = agrega(cs.filter(c => c.rede === 'publica')).fim.tda, pri = agrega(cs.filter(c => c.rede === 'privada')).fim.tda;
   const cen = censo(state), ead = lobo(cen.soma(2024, 'privada', 2), cen.soma(2023, 'privada', 2));
-  const pts = cpcPontos(cs), rho = spearman(pts.map(p => p.cpc), pts.map(p => p.tda)), B = b2data(), q = B.q, dq = q.length ? q[3].desist - q[0].desist : null;
+  const pts = cpcPontos(cs), rho = spearman(pts.map(p => p.cpc), pts.map(p => p.tda)), B = b2data(), q = B.q;
   const b1 = b1rows(), des = b1.filter(m => m.vagas === 0);
-  const naoExplica = (rho == null || Math.abs(rho) < .3) && (dq == null || dq >= 0);
+  const lf = leituraFies(q), cpcNulo = rho == null || Math.abs(rho) < .1;
   const C3 = [
    {n:pc(f.tda, 0), t:'A perda é alta e acontece cedo', x:`${fmt(f.tda, 0)} de cada 100 ingressantes de 2015 desistiram do curso. ${pc(ate2, 0)} de todas as desistências ocorreram até o 2º ano, e o pico é no ${a.pico.ano - 2014}º ano (${fmt(a.pico.tada, 1)} p.p. da turma).`, ev:'P1 · Trajetória', go:'p1'},
    {n:hiA ? pc(hiA.d, 0) : '—', t:'A perda é desigual entre áreas, cursos e redes', x:`${hiA ? curta(hiA.area) + ' perde ' + pc(hiA.d, 0) + ' da turma, contra ' + pc(loA.d, 0) + ' em ' + curta(loA.area) + '. ' : ''}Na rede privada presencial a desistência é ${pc(pri, 0)}, ante ${pc(pub, 0)} na pública; no EAD privado a evasão anual estimada chega a ${pc(ead, 0)}.`, ev:'P2 e P3 · Cursos, rede e modalidade', go:'p2'},
-   {n:rho == null ? '—' : fmt(rho, 2), t:naoExplica ? 'CPC e financiamento não explicam a diferença' : 'Qualidade e financiamento se associam à permanência', x:`A correlação entre CPC e desistência é ${forca(rho)} (${rho == null ? '—' : fmt(rho, 2)}), e nos cursos mais financiados a desistência ${dq != null && dq > 0 ? 'é maior, e não menor' : dq != null && dq < -3 ? 'é menor' : 'é semelhante'}${dq != null ? ` (${dq > 0 ? '+' : ''}${fmt(dq, 0)} p.p. do quartil mais para o menos financiado)` : ''}. Os fatores da desistência precisam ser buscados também fora desses indicadores.`, ev:'P4 e B2 · Qualidade e financiamento', go:'p4'}
+   {n:rho == null ? '—' : fmt(rho, 2), t:cpcNulo ? (lf.padrao === 'menor' ? 'O CPC não explica; mais FIES, menos desistência' : 'CPC e FIES não explicam a diferença de forma consistente') : 'Qualidade e financiamento se associam à permanência', x:`A correlação entre CPC e desistência é ${forca(rho)} (${rho == null ? '—' : fmt(rho, 2)}, em ${pts.length} cursos). Na rede privada, ${lf.txt || 'há poucos cursos com financiamento no recorte'}. Os fatores da desistência precisam ser buscados também fora desses indicadores.`, ev:'P4 e B2 · Qualidade e financiamento', go:'p4'}
   ];
   const minis = [
     {v:a.anos.map(x => x.tada), cor:C.loss, cap:'Desistência a cada ano, 2015–2024 (p.p.)'},
     {v:ar.map(x => x.d), cor:C.sand, cap:'Desistência por área, da maior para a menor'},
-    {v:q.map(x => x.desist), cor:C.blue, cap:'Desistência por quartil de financiamento (Q1 a Q4)'}
+    {v:q.map(x => x.desist), cor:C.blue, cap:'Desistência por faixa de FIES (sem FIES → mais de 10%)'}
   ];
-  const tese = `${fmt(f.tda / 10, 0)} em cada 10 ingressantes de 2015 em cursos presenciais de MT desistiram do curso, ${ate2 >= 35 ? 'boa parte nos dois primeiros anos' : 'ao longo de toda a trajetória'}. A perda se concentra em ${hiA ? curta(hiA.area) : 'algumas áreas'}${top3.length ? ', em cursos como ' + top3.slice(0, 2).join(' e ') : ''}, e é maior na rede ${pri > pub ? 'privada' : 'pública'}${naoExplica ? '; nem o CPC nem o financiamento explicam essa diferença' : ''}.`;
+  const tese = `${fmt(f.tda / 10, 0)} em cada 10 ingressantes de 2015 em cursos presenciais de MT desistiram do curso, ${ate2 >= 35 ? 'boa parte nos dois primeiros anos' : 'ao longo de toda a trajetória'}. A perda se concentra em ${hiA ? curta(hiA.area) : 'algumas áreas'}${top3.length ? ', em cursos como ' + top3.slice(0, 2).join(' e ') : ''}, e é maior na rede ${pri > pub ? 'privada' : 'pública'}${cpcNulo ? '; o CPC não explica essa diferença' + (lf.padrao === 'irregular' ? ', e a relação com o FIES é irregular' : '') : ''}.`;
   const steps = [['Quanto', 'P1'], ['Onde', 'P2 · P3'], ['Por quê', 'P4 · P5 · B2'], ['O que fazer', 'Recomendação']];
   el.innerHTML = pageHead(this) + `<div class="sum-top"><div class="thesis"><span class="ans-q">Tese</span><p>${tese}</p></div>
     <div class="path">${steps.map((s, i) => `<div class="step ${i === 3 ? 'last' : ''}"><span class="sn">${i + 1}</span><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join('')}</div></div>
@@ -349,7 +361,7 @@ addPage({id:'resumo', title:'Resumo final', sub:'Três conclusões que os dados 
      <div class="reco-do"><h4>O que fazer</h4><ol class="acts">
       <li><b>Acompanhar cedo</b><span>Busca ativa e apoio acadêmico no 1º e no 2º ano, quando a turma mais se perde.</span></li>
       <li><b>Priorizar os cursos críticos</b><span>${top3.length ? top3.join(', ') : 'Cursos com maior desistência'}.</span></li>
-      <li><b>Ir além do CPC e do financiamento</b><span>Investigar fatores do estudante (renda, trabalho, deslocamento), que essas bases não medem.</span></li>
+      <li><b>Ir além do CPC</b><span>O CPC não separa os cursos que retêm dos que perdem. Investigar fatores do estudante (renda, trabalho, deslocamento) e o papel do financiamento, que essas bases não medem por aluno.</span></li>
       <li><b>Ampliar o acesso</b><span>Polos e oferta presencial nos municípios sem graduação.</span></li></ol></div></div></div>
    ${note('Fontes: INEP (Trajetória 2015–2024, Censo da Educação Superior 2021–2024, CPC 2021–2023, Enade 2025) e IBGE (Censo 2022). Associações entre cursos não provam causa. Gerado por scripts/build_fixed_data.py.')}`;
   minis.forEach((m, k) => m.v.length ? sparkline($('mini' + k), m.v, m.cor) : null);

@@ -72,7 +72,9 @@ class AnalyticsService:
             applicable = {
                 key: value
                 for key, value in selected.items()
-                if name != "municipal" or key in ("network", "municipality")
+                if (name == "municipal_population" and key == "municipality")
+                or (name == "municipal" and key in ("network", "municipality"))
+                or name not in ("municipal", "municipal_population")
             }
             data[name] = [
                 row
@@ -82,12 +84,24 @@ class AnalyticsService:
         totals = {}
         for row in data["finance"]:
             key = (row["year"], row["modality"])
-            target = totals.setdefault(key, {"year": key[0], "modality": key[1],
-                "matriculated": 0, "fies": 0, "prouni_full": 0, "prouni_partial": 0})
+            target = totals.setdefault(
+                key,
+                {
+                    "year": key[0],
+                    "modality": key[1],
+                    "matriculated": 0,
+                    "fies": 0,
+                    "prouni_full": 0,
+                    "prouni_partial": 0,
+                },
+            )
             for measure in ("matriculated", "fies", "prouni_full", "prouni_partial"):
                 target[measure] += row[measure]
         data["finance"] = [row for row in totals.values() if row["matriculated"] >= 10]
         municipality_names = {row["municipality"]: row["name"] for row in payload["municipal"]}
+        municipality_names.update(
+            {row["municipality"]: row["name"] for row in payload.get("municipal_population", [])}
+        )
         codes = {row["municipality"] for row in payload["courses"]} | set(municipality_names)
         options = {
             "areas": [

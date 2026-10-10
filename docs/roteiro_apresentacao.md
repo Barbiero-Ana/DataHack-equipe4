@@ -10,12 +10,12 @@ Use a página **Respostas**, limpe os filtros gerais e selecione cada cartão. N
 
 | Abra | O que dizer | O que mostrar |
 | --- | --- | --- |
-| P1 | “No recorte publicado, 59,9% dos vínculos desistiram do curso, 38,8% concluíram e 1,3% permaneciam. Desistir do curso não significa necessariamente abandonar todo o ensino superior.” | Linhas da trajetória e distribuição final. |
+| P1 | “No recorte publicado, 59,9% dos vínculos desistiram do curso, 38,8% concluíram e 1,3% permaneciam. Desistir do curso não significa necessariamente abandonar todo o ensino superior.” | Linhas e áreas empilhadas da situação da turma. |
 | P2 | “Computação e TIC tiveram a maior taxa agregada entre as áreas: 69,5%. Engenharia, produção e construção veio a seguir, com 68,3%. Usamos o total de desistentes dividido pelo denominador da área, respeitando o tamanho dos cursos.” | Comparação por área. Taxa alta e maior quantidade de desistentes são perguntas diferentes. |
 | P3 | “Em 2024, a estimativa anual foi 23,6% no presencial público e 29,1% no presencial privado. No EAD, foi 30,8% no público e 66,3% no privado. É uma estimativa por balanço de matrículas, diferente da desistência acumulada de uma turma.” | Série anual por rede/modalidade. Desvinculações estão na tabela da página P3. |
 | P4 | “Nos 277 cursos comparáveis, a associação entre CPC e desistência foi próxima de zero: −0,036. Portanto, neste recorte, não encontramos uma relação monotônica forte entre as duas medidas.” | Dispersão CPC × desistência. Cada ponto representa um curso. |
 | P5 | “Nas licenciaturas acompanhadas, a desistência foi 57,2%. Separadamente, entre 848 avaliados nos 38 cursos correspondentes do Enade 2025, 521 foram proficientes: 61,4%. São grupos diferentes; não podemos multiplicar essas taxas.” | Os dois gráficos de distribuição, explicando os denominadores. |
-| B1 | “Em 2022, temos registros de oferta presencial em 42 municípios, somando 84.508 vagas. Cuiabá registra 24.949 vagas. O mapa permite comparar redes e consultar municípios. Ainda não podemos medir vagas por cem jovens em cada município porque a população disponível é estadual.” | Filtro de rede, legenda e seleção de Cuiabá. Cinza significa sem registro no recorte. |
+| B1 | “Em 2022, temos registros de oferta presencial em 42 municípios, somando 84.508 vagas. Cuiabá registra 24.949 vagas. O mapa permite comparar redes e consultar municípios. Cruzamos os 141 municípios com 397.671 jovens de 18–24 anos do Censo 2022. Cuiabá tem 67.493 jovens e 36,97 vagas por cem jovens. Isso mede oferta relativa, não acesso efetivo.” | Filtro de rede, legenda e seleção de Cuiabá. Cinza significa sem registro no recorte. |
 | B2 | “Ligamos financiamento e trajetória em 181 cursos privados. Podemos comparar participação do FIES e resultados dos cursos. Não conseguimos afirmar que o financiamento reduziu a desistência: não acompanhamos os mesmos beneficiários desde 2015. FIES e ProUni são apresentados separadamente.” | Séries dos programas e dispersão FIES × desistência. |
 
 ## 3. Por que e como validamos — 50 segundos
@@ -24,11 +24,11 @@ Use a página **Respostas**, limpe os filtros gerais e selecione cada cartão. N
 
 Padronizamos códigos e campos com Python e pandas, verificamos duplicidades e cruzamos instituição mais curso. Conferimos os numeradores e denominadores, sem somar repetidamente os ingressantes da mesma turma. Também reconciliamos cinco taxas da fonte com as contagens.
 
-Depois comparamos os sete conjuntos calculados em pandas com os publicados no PostgreSQL e verificamos seis combinações de filtros da API. Os resultados coincidiram. A suíte passou em 72 testes, com quatro testes opcionais de banco não executados, e conferimos os gráficos no navegador. Isso verifica a consistência do processamento; não comprova causalidade nem elimina limitações das fontes.”
+Depois comparamos os oito conjuntos calculados em pandas com os publicados no PostgreSQL e verificamos seis combinações de filtros da API. Os resultados coincidiram. A suíte passou em 77 testes, com quatro testes opcionais de banco não executados, e conferimos os gráficos no navegador. Isso verifica a consistência do processamento; não comprova causalidade nem elimina limitações das fontes.”
 
 ## 4. Fechamento — 20 segundos
 
-“O principal achado é a perda de vínculos ao longo da trajetória, com diferenças entre áreas e modalidades. Os dados ajudam a escolher onde investigar e priorizar ações. A próxima etapa é completar a população municipal e aprofundar os fatores associados à permanência.”
+“O principal achado é a perda de vínculos ao longo da trajetória, com diferenças entre áreas e modalidades. Os dados ajudam a escolher onde investigar e priorizar ações. A próxima etapa é investigar as lacunas de oferta e aprofundar os fatores associados à permanência.”
 
 ## Se a banca perguntar
 

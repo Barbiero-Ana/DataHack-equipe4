@@ -4,6 +4,7 @@ import type {Dashboard,CourseRow} from '../api/dashboard';
 import type {AnalyticsData} from '../hooks/useAnalytics';
 import {Bars,Lines,Scatter,Distribution,Tree,Divergence,palette,number,pct,ratio} from './RealCharts';
 import {SeriesChart} from './SeriesChart';
+import {TrajectoryChart,CohortComposition} from './TrajectoryCharts';
 import type {PageId} from '../pages';
 export function RealCard({title,hint,children}:{title:string;hint:string;children:ReactNode}){
  return <div className="card"><h3>{title}</h3><p className="hint">{hint}</p>{children}</div>;
@@ -32,13 +33,15 @@ export function QuestionEvidence({question,chart,annual}:{question:Question;char
  let evidence:ReactNode;
  if(question==='p1' && !courses.length) return <p className="empty">Nenhum curso de trajetória da coorte 2015 no recorte selecionado. As medidas estão indisponíveis.</p>;
  if(question==='p1'){
-  const totals=summarize(courses),annualLoss=timeline.map((r,i)=>({label:String(years[i]),value:r.annual_dropout}));
-  evidence=<><div className="kpis"><Metric value={number(totals.ingress)} label="ingressantes · coorte 2015"/><Metric value={pct(totals.dropout_pct)} label="desistência acumulada"/><Metric value={pct(totals.concluded_pct)} label="conclusão acumulada"/><Metric value={pct(totals.remaining_pct)} label="permanência em 2024"/></div>
-   <div className="grid c2"><RealCard title="Trajetória da coorte 2015" hint="Taxas ponderadas pelo denominador ajustado por falecimentos; presencial, MT.">
-    <Lines years={years} percent series={[{label:'Desistência',color:palette[1],values:timeline.map(r=>r.dropout_pct)},{label:'Conclusão',color:palette[0],values:timeline.map(r=>r.concluded_pct)},{label:'Permanência',color:palette[2],values:timeline.map(r=>r.remaining_pct)}]}/></RealCard>
-    <RealCard title="Desistências anuais" hint="Contagens anuais da mesma coorte; ingressantes não são somados entre referências."><Bars rows={annualLoss} color={palette[1]}/></RealCard>
-    <RealCard title="Situação em 2024" hint={`Denominador ajustado: ${number(totals.denominator)}; ingressantes originais: ${number(totals.ingress)}.`}><Distribution items={[{label:'Concluíram',value:totals.concluded,color:palette[0]},{label:'Desistiram',value:totals.dropout,color:palette[1]},{label:'Permaneciam',value:totals.remaining,color:palette[2]}]}/></RealCard>
-    <RealCard title="Ingressantes por rede" hint="Uma contagem da coorte 2015 por curso; outras coortes não estão disponíveis."><Bars rows={['1','2'].flatMap(n=>{const group=courses.filter(r=>r.network===n);return group.length?[{label:n==='1'?'Pública':'Privada',value:summarize(group).ingress}]:[];})}/></RealCard></div></>;
+  const totals=summarize(courses);
+  const trajectory=timeline.map((r,i)=>({year:years[i],concluded:r.concluded_pct!,remaining:r.remaining_pct!,dropout:r.dropout_pct!,loss:ratio(r.annual_dropout,r.denominator)!}));
+  const peak=trajectory.reduce((a,b)=>b.loss>a.loss?b:a);
+  evidence=<><div className="kpis"><Metric value={number(totals.ingress)} label="ingressantes · coorte 2015"/><Metric value={pct(totals.concluded_pct)} label="conclusão acumulada"/><Metric value={pct(totals.dropout_pct)} label="desistência acumulada"/><Metric value={pct(totals.remaining_pct)} label="permanência em 2024"/><Metric value={String(peak.year)} label="ano de maior taxa de desistência anual"/></div>
+   <div className="grid c21"><RealCard title="Evolução da desistência e da conclusão" hint="Percentual acumulado da turma em cada ano de acompanhamento."><TrajectoryChart rows={trajectory} kind="line"/></RealCard>
+    <RealCard title="Quem compõe a coorte 2015" hint="Ingressantes por grau acadêmico e rede; respeita todos os filtros selecionados."><CohortComposition courses={courses}/></RealCard></div>
+   <div className="grid c21"><RealCard title="Situação da turma" hint="Concluiu + cursando + desistiu somam 100% em cada ano."><TrajectoryChart rows={trajectory} kind="area"/></RealCard>
+    <RealCard title="Perda a cada ano" hint="Desistências anuais divididas pelo denominador ajustado daquele ano, em pontos percentuais da turma."><TrajectoryChart rows={trajectory} kind="loss"/></RealCard></div>
+   <p className="note">{number(courses.length)} cursos · {number(totals.ingress)} ingressantes originais · denominador de 2024 ajustado por falecimentos: {number(totals.denominator)}. Desistência do curso inclui desvinculação e transferência; não comprova abandono do ensino superior.</p></>;
  }else if(question==='p2'){
   const areas=[...new Set(courses.map(r=>r.area))].map(area=>({label:area,value:summarize(courses.filter(r=>r.area===area)).dropout_pct})).filter((r):r is {label:string;value:number}=>r.value!==null).sort((a,b)=>b.value-a.value);
   const baseline=summarize(courses).dropout_pct;
@@ -66,7 +69,7 @@ export function QuestionEvidence({question,chart,annual}:{question:Question;char
    <RealCard title="Desistência × proficiência por curso" hint="Correspondência curso + IES; coorte 2015 e avaliados 2025, sem vínculo individual."><Scatter points={d.enade.map(r=>({label:courseLabel(r),x:r.dropout_pct,y:r.proficiency_pct,size:r.participants}))} xlabel="Desistência da coorte (%)" ylabel="Proficiência Enade 2025 (%)"/></RealCard>
    <RealCard title="Proficiência por licenciatura" hint="Proficientes / participantes de cada curso, com pelo menos 10 avaliados."><Bars rows={[...d.enade].sort((a,b)=>b.proficiency_pct-a.proficiency_pct).slice(0,10).map(r=>({label:courseLabel(r),value:r.proficiency_pct}))} percent/></RealCard></div></>;
  }else if(question==='b1'){
-  evidence=<><MunicipalEvidence rows={d.municipal}/>
+  evidence=<><MunicipalEvidence rows={d.municipal} population={d.municipal_population||[]}/>
    {annual?.population.records[0]&&<RealCard title="Complemento estadual · Censo 2022" hint="População e oferta no mesmo ano e UF; não recebe filtros municipais."><Bars rows={[{label:'População 18–19 anos',value:annual.population.records[0].qt_pop_18_19},{label:'População 20–24 anos',value:annual.population.records[0].qt_pop_20_24}]}/></RealCard>}</>;
  }else{
   const fy=[...new Set(d.finance.map(r=>r.year))].sort(),measure=(key:'matriculated'|'fies'|'prouni_full'|'prouni_partial',year:number)=>d.finance.filter(r=>r.year===year).reduce((s,r)=>s+r[key],0);
@@ -97,7 +100,7 @@ export function RealQuestionsPage({current,chart,annual,selected,setSelected}:{c
   p3:'Os gráficos comparam matrículas e estimativa anual por rede/modalidade. A estimativa usa o ano anterior; 2021 permanece indisponível sem Censo 2020. Grau, área e município não filtram este produto estadual.',
   p4:`Nos ${d.cpc.length} cursos com ambas as medidas, Spearman CPC/desistência é ${number(cpcRho,3)}. A associação observada não demonstra que qualidade cause retenção. Cada ponto informa a edição CPC.`,
   p5:`Nas licenciaturas da coorte, a desistência é ${pct(licSummary.dropout_pct)}. Nos ${d.enade.length} cursos correspondentes publicáveis do Enade 2025, ${number(prof)} de ${number(participants)} avaliados são proficientes (${pct(ratio(prof,participants))}). São populações diferentes.`,
-  b1:`Há registros de oferta presencial em ${values.b1} municípios neste recorte de 2022. O mapa mostra vagas reais. A população estadual não permite calcular vagas por 100 jovens em cada município nem contar desertos municipais.`,
+  b1:`Há registros de oferta presencial em ${values.b1} municípios neste recorte de 2022. ${d.municipal_population?.length?'O mapa cruza vagas presenciais com a população municipal de 18–24 anos de 2022. Vagas por 100 jovens mede oferta relativa, não uma taxa de acesso.':'A população municipal ainda não foi publicada.'} Ausência de registro de oferta não comprova oferta zero.`,
   b2:`Financiamento e trajetória foram ligados em ${d.funding_relationship.length} cursos privados. FIES e ProUni aparecem separadamente; os dados não identificam o financiamento dos mesmos ingressantes de 2015 nem demonstram efeito causal.`,
  };
  return <>{(current==='ans'||current==='resumo')&&<>
