@@ -5,7 +5,7 @@ Implementado em 10/10/2026. **Respostas** apresenta 22 gráficos reais, selecion
 | Pergunta | Gráficos |
 | --- | --- |
 | P1 | Trajetória anual, desistências anuais, situação final, ingressantes por rede |
-| P2 | Cursos por área, desistência ponderada por área, ranking de cursos |
+| P2 | Cursos por área, divergência por área em pontos percentuais e evolução da coorte 2015 |
 | P3 | Matrículas e estimativa anual; desvinculações na tabela da página P3 |
 | P4 | CPC × desistência, faixas oficiais de CPC; tabela adicional de correlações dos componentes |
 | P5 | Resultados da coorte, proficiência dos avaliados, associação entre cursos, proficiência por curso |
@@ -48,3 +48,9 @@ Restaurados filtro local de rede (pública = 1, privada = 2), consulta municipal
 Validação na interface: rede pública = 38 municípios, 17.223 vagas e 45.706 matrículas; Cuiabá pública = 4.409 vagas e 11.943 matrículas. Valores conferidos com a API. Alternância para matrículas atualizou a legenda; menor oferta destacou 15 municípios. Build TypeScript/Vite passou e não foram observados erros de JavaScript. Evidências: `outputs/dashboard/b1_controles.png` e `b1_legenda.png`.
 
 Roteiro oral: [roteiro_apresentacao.md](roteiro_apresentacao.md).
+
+## P2 — divergência e linha da coorte
+
+O gráfico divergente calcula taxa ponderada da área menos taxa ponderada do recorte, em pontos percentuais. O zero representa a taxa do recorte selecionado; não representa ausência de desistência. No recorte completo, Computação/TIC fica cerca de 9,6 p.p. acima da referência de 59,9%.
+
+O gráfico de linhas acompanha a coorte 2015 entre 2015 e 2024: total do recorte e as áreas com maior/menor taxa final. A carga contém somente a coorte 2015, portanto os anos de observação não são tratados como novas coortes. Os filtros recalculam a referência, as áreas extremas e suas séries; valores ausentes permanecem indisponíveis.

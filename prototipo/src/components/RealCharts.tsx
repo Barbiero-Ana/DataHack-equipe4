@@ -7,6 +7,21 @@ export const number=(v:number|null|undefined,d=0)=>v==null?'Indisponível':v.toL
 export const pct=(v:number|null|undefined)=>v==null?'Indisponível':`${number(v,1)}%`;
 export const ratio=(n:number,d:number)=>d>0?100*n/d:null;
 export interface Point {label:string;x:number;y:number;size?:number;color?:string}
+export function Divergence({rows,baseline}:{rows:{label:string;value:number}[];baseline:number|null}){
+ if(!rows.length||baseline===null)return <p className="empty">Sem áreas com denominador disponível neste recorte.</p>;
+ const limit=Math.max(1,Math.ceil(Math.max(...rows.map(r=>Math.abs(r.value-baseline)))));
+ const width=760,left=325,right=665,center=(left+right)/2,top=48,height=top+rows.length*38+40;
+ const x=(v:number)=>center+v/limit*(right-left)/2;
+ const signed=(v:number)=>`${v>0?'+':''}${number(v,1)} p.p.`;
+ return <><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Divergência da desistência por área em pontos percentuais">
+  {[-limit,-limit/2,0,limit/2,limit].map(v=><g key={v}><line x1={x(v)} x2={x(v)} y1={top-8} y2={height-30} stroke={v===0?'#2b2d42':'#e4e0e5'} strokeWidth={v===0?1.6:1}/><text x={x(v)} y="23" textAnchor="middle">{signed(v)}</text></g>)}
+  {rows.map((r,i)=>{const delta=r.value-baseline,position=x(delta),y=top+i*38;return <g key={r.label}>
+   <text x={left-90} y={y+18} textAnchor="end"><title>{r.label}</title>{r.label.length>32?`${r.label.slice(0,31)}…`:r.label}</text>
+   <rect x={Math.min(center,position)} y={y+3} width={Math.max(.8,Math.abs(position-center))} height="23" rx="3" fill={delta>0?palette[1]:palette[0]}><title>{r.label}: {pct(r.value)} · {signed(delta)} em relação ao recorte ({pct(baseline)})</title></rect>
+   <text x={delta>=0?position+6:position-6} y={y+19} textAnchor={delta>=0?'start':'end'}>{signed(delta)}</text>
+  </g>;})}
+ </svg><div className="legend"><span><i style={{background:palette[0]}}/>Abaixo da taxa do recorte</span><span><i style={{background:palette[1]}}/>Acima da taxa do recorte</span><span>Zero = {pct(baseline)} de desistência</span></div></>;
+}
 export function Bars({rows,percent=false,color=palette[0]}:{rows:{label:string;value:number}[];percent?:boolean;color?:string}){
  if(!rows.length)return <p className="empty">Sem registros neste recorte.</p>;
  const height=Math.max(200,rows.length*32+30),max=Math.max(1,...rows.map(r=>r.value)),width=760,left=225,right=85;

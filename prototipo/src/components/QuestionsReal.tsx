@@ -2,7 +2,7 @@ import type {ReactNode} from 'react';
 import {MunicipalEvidence} from './MunicipalEvidence';
 import type {Dashboard,CourseRow} from '../api/dashboard';
 import type {AnalyticsData} from '../hooks/useAnalytics';
-import {Bars,Lines,Scatter,Distribution,Tree,palette,number,pct,ratio} from './RealCharts';
+import {Bars,Lines,Scatter,Distribution,Tree,Divergence,palette,number,pct,ratio} from './RealCharts';
 import {SeriesChart} from './SeriesChart';
 import type {PageId} from '../pages';
 export function RealCard({title,hint,children}:{title:string;hint:string;children:ReactNode}){
@@ -41,9 +41,12 @@ export function QuestionEvidence({question,chart,annual}:{question:Question;char
     <RealCard title="Ingressantes por rede" hint="Uma contagem da coorte 2015 por curso; outras coortes não estão disponíveis."><Bars rows={['1','2'].flatMap(n=>{const group=courses.filter(r=>r.network===n);return group.length?[{label:n==='1'?'Pública':'Privada',value:summarize(group).ingress}]:[];})}/></RealCard></div></>;
  }else if(question==='p2'){
   const areas=[...new Set(courses.map(r=>r.area))].map(area=>({label:area,value:summarize(courses.filter(r=>r.area===area)).dropout_pct})).filter((r):r is {label:string;value:number}=>r.value!==null).sort((a,b)=>b.value-a.value);
+  const baseline=summarize(courses).dropout_pct;
+  const extremes=areas.length>1?[areas[0],areas[areas.length-1]]:areas;
+  const areaSeries=extremes.map((area,i)=>({label:`${i===0?'Maior':'Menor'} taxa final: ${area.label}`,color:i===0?palette[1]:palette[0],values:years.map(year=>summarize(d.trajectory.filter(r=>r.year===year&&r.area===area.label)).dropout_pct)}));
   evidence=<><RealCard title="Cursos agrupados por área" hint="Valores reais; tamanho é a coorte original e cor é a desistência acumulada até 2024."><Tree rows={courses}/></RealCard>
-   <div className="grid c2"><RealCard title="Desistência por área" hint="Soma dos desistentes / soma dos denominadores ajustados, não média simples."><Bars rows={areas} percent color={palette[1]}/></RealCard>
-   <RealCard title="Cursos com maior desistência" hint="Cada vínculo curso/IES é identificado pelo código; coorte com pelo menos 10 ingressantes."><Bars rows={[...courses].sort((a,b)=>b.dropout_pct-a.dropout_pct).slice(0,10).map(r=>({label:courseLabel(r),value:r.dropout_pct}))} percent color={palette[1]}/></RealCard></div></>;
+   <div className="grid c2"><RealCard title="Divergência da desistência por área" hint={`Diferença em pontos percentuais entre a taxa de cada área e a taxa geral do recorte (${pct(baseline)}). Ambas são ponderadas pelo denominador ajustado.`}><Divergence rows={areas} baseline={baseline}/></RealCard>
+   <RealCard title="Desistência ao longo da coorte 2015" hint="Acompanhamento de 2015 a 2024: total do recorte e áreas com maior e menor taxa final. Cada linha acompanha os ingressantes de 2015."><Lines years={years} percent series={[{label:'Total do recorte · coorte 2015',color:palette[2],values:timeline.map(r=>r.dropout_pct)},...areaSeries]}/><p className="note">Só a coorte 2015 está disponível. As linhas comparam áreas da mesma coorte; os anos no eixo são de acompanhamento, não novas coortes.</p></RealCard></div></>;
  }else if(question==='p3'){
   evidence=annual?<div className="grid c2"><RealCard title="Matrículas por rede e modalidade" hint="Censo 2021–2024 · filtros próprios da P3."><SeriesChart rows={annual.annual.records} metric="qt_mat"/></RealCard>
    <RealCard title="Estimativa de evasão anual" hint="Balanço de matrículas; 2021 indisponível sem Censo 2020. Não equivale à desistência da coorte."><SeriesChart rows={annual.annual.records} metric="evasao_estimada_pct"/></RealCard></div>:<p className="empty">Aguardando os indicadores anuais da API.</p>;
